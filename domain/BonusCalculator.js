@@ -78,7 +78,12 @@ class BonusCalculator{
         return totalBonus;
 
     }
-
+    /**
+     * Aggregates the data for items whose calculations are done by category
+     * @private
+     * @param {Object<string, {quantity: number, revenue: number}>} items
+     * @returns {Object {quantity: number, revenue: number}}
+     */
     #aggregateCategory(items){
         let totalQuantity = 0;
         let totalRevenue = 0;
@@ -108,8 +113,6 @@ class BonusCalculator{
         return categoryData.revenue * tier.percentage;
     }
 
-
-   
 }
 
 module.exports = BonusCalculator;
