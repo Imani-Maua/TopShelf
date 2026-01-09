@@ -1,4 +1,4 @@
-const TierConfig = require('../domain/TierConfig');
+const TierConfig = require('../../domain/TierConfig');
 
 
 describe('TierConfig', ()=>{

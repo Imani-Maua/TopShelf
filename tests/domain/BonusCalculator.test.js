@@ -1,5 +1,5 @@
-const BonusCalculator = require('../domain/BonusCalculator');
-const TierConfig = require('../domain/TierConfig')
+const BonusCalculator = require('../../domain/BonusCalculator');
+const TierConfig = require('../../domain/TierConfig');
 
 
 describe('BonusCalculator', ()=> {
