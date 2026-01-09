@@ -89,7 +89,8 @@ describe('BonusCalculator', ()=> {
        });
 
        const salesData = {
-         quantity: 22, revenue: 144
+         negroni: {quantity: 12, revenue: 84},
+         martini: {quantity: 10, revenue: 60}
        };
 
        const bonus = calculator.calculateBonus(salesData);
@@ -112,5 +113,6 @@ describe('BonusCalculator', ()=> {
        expect(()=> {calculator.calculateBonus({})}).toThrow('Unsupported bonus calculation mode');
 
     });
+
  
 });

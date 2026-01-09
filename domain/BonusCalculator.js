@@ -79,20 +79,36 @@ class BonusCalculator{
 
     }
 
+    #aggregateCategory(items){
+        let totalQuantity = 0;
+        let totalRevenue = 0;
+
+        for(const {quantity, revenue} of Object.values(items)){
+            totalQuantity += quantity;
+            totalRevenue += revenue;
+        }
+
+        return {
+            quantity: totalQuantity,
+            revenue: totalRevenue
+        };
+    }
+
     /**
      * Calculates  bonus based on aggregated category totals
      * @param {{quantity: number, revenue: number}} categoryData 
      * @returns {number} Total category bonus
      * 
      */
-    #calculatePerCategoryBonus(categoryData){
-        const {quantity, revenue} =categoryData;
-
-        const tier = this.tierConfig.getApplicableTier(quantity);
+    #calculatePerCategoryBonus(items){
+        const categoryData = this.#aggregateCategory(items)
+        const tier = this.tierConfig.getApplicableTier(categoryData.quantity);
         if(!tier) return 0;
 
-        return revenue * tier.percentage;
+        return categoryData.revenue * tier.percentage;
     }
+
+
    
 }
 
