@@ -1,4 +1,4 @@
-const ForecastChecker = require('/domain/ForecastChecker');
+const ForecastChecker = require('../../domain/ForecastChecker');
 
 
 describe('ForecastChecker', ()=>{

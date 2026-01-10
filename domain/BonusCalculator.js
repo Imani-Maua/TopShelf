@@ -1,6 +1,16 @@
+/**
+ * BonusCalculator computes upsell bonuses using tier-based rules.
+ * 
+ * It supports two calculation modes:
+ * - PER ITEM: bonus is calculated independently per item
+ * - PER CATEGORY: bonus is calculated on aggregated category totals
+ */
+
 
 class BonusCalculator{
     /**
+     * 
+     * Creates a Bonus Calculator
      * 
      * @param {Object} options
      * @param {string} options.category - Category name (eg steak, cocktails, desserts)
@@ -18,6 +28,24 @@ class BonusCalculator{
         this.mode = mode;
     }
 
+    /**
+     * Calculates the total bonus for the given sales data.
+     * @param {Object} salesData 
+     * 
+     * in PER ITEM mode:
+     * {
+     *   itemName: {quantity: number, revenue: number}
+     * }
+     * 
+     * in PER CATEGORY mode:
+     * {
+     *  quantity: number,
+     *  revenue: number
+     * }
+     * @returns {number} Total bonus amount
+     * 
+     * @throws {Error} If unsupported calculation mode is provided
+     */
     calculateBonus(salesData){
         if(!salesData) return 0;
 
@@ -30,6 +58,13 @@ class BonusCalculator{
         throw new Error(`Unsupported bonus calculation mode: ${this.mode}`);
     }
 
+
+    /**
+     * 
+     * @private
+     * @param {Object<string, {quantity: number, revenue: number}>} items
+     * @returns {number} Total bonus across all items
+     */
     #calculatePerItemBonus(items){
         let totalBonus = 0;
 
@@ -43,16 +78,41 @@ class BonusCalculator{
         return totalBonus;
 
     }
+    /**
+     * Aggregates the data for items whose calculations are done by category
+     * @private
+     * @param {Object<string, {quantity: number, revenue: number}>} items
+     * @returns {Object {quantity: number, revenue: number}}
+     */
+    #aggregateCategory(items){
+        let totalQuantity = 0;
+        let totalRevenue = 0;
 
-    #calculatePerCategoryBonus(categoryData){
-        const {quantity, revenue} =categoryData;
+        for(const {quantity, revenue} of Object.values(items)){
+            totalQuantity += quantity;
+            totalRevenue += revenue;
+        }
 
-        const tier = this.tierConfig.getApplicableTier(quantity);
+        return {
+            quantity: totalQuantity,
+            revenue: totalRevenue
+        };
+    }
+
+    /**
+     * Calculates  bonus based on aggregated category totals
+     * @param {{quantity: number, revenue: number}} categoryData 
+     * @returns {number} Total category bonus
+     * 
+     */
+    #calculatePerCategoryBonus(items){
+        const categoryData = this.#aggregateCategory(items)
+        const tier = this.tierConfig.getApplicableTier(categoryData.quantity);
         if(!tier) return 0;
 
-        return revenue * tier.percentage;
+        return categoryData.revenue * tier.percentage;
     }
-   
+
 }
 
 module.exports = BonusCalculator;
