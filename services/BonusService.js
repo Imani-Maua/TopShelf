@@ -58,4 +58,4 @@ class BonusService{
 
 }
 
-module.exports = BonusService
+module.exports = BonusService;
