@@ -1,8 +1,8 @@
-const BonusService = require('../../services/BonusService');
+const bonusService = require('../../core/bonus/service');
 
 describe('BonusService integration', ()=>{
     test('calculates bonuses for multiple sellers across categories', ()=>{
-        const service = new BonusService({
+        const service = new bonusService({
             upsellCatalog: {
                 steak: ['wagyu'],
                 cocktail: ['negroni', 'martini']
@@ -50,7 +50,7 @@ describe('BonusService integration', ()=>{
 
 
     test('returns no payoouts when forecast is not met', () => {
-        const service = new BonusService({
+        const service = new bonusService({
             upsellCatalog: {
                 steak: ['wagyu'],
                 cocktail: ['negroni']

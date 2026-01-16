@@ -1,8 +1,8 @@
-const ReceiptAggregator = require('../domain/ReceiptAggregator');
-const TierConfig = require('../domain/TierConfig');
-const BonusCalculator = require('../domain/BonusCalculator');
-const BonusPayouts = require('../domain/BonusPayouts');
-const ForecastChecker = require('../domain/ForecastChecker');
+const ReceiptAggregator = require('../bonus/engine/receiptAggregator');
+const TierConfig = require('../bonus/engine/tierConfig');
+const BonusCalculator = require('../bonus/engine/bonusCalculator');
+const BonusPayouts = require('../bonus/engine/bonusPayouts');
+const ForecastChecker = require('../bonus/engine/forecastChecker');
 
 
 class BonusService{

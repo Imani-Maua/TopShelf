@@ -1,13 +1,12 @@
-const BonusController = require('../../controllers/BonusServiceController');
-const BonusService = require('../../services/BonusService');
-
+const bonusController = require('../../core/bonus/controller');
+const bonusService = require('../../core/bonus/service');
 
 describe('Bonus Controller Integration', ()=> {
 
     let controller;
 
     beforeEach(()=>{
-        service = new BonusService({
+         const service = new bonusService({
             upsellCatalog: {
                 steak: ['ribeye', 'wagyu'],
                 cocktail: ['negroni', 'martini'],
@@ -35,7 +34,7 @@ describe('Bonus Controller Integration', ()=> {
             monthlyForecast: 200
         });
         
-        controller = new BonusController(service);
+        controller = new bonusController(service);
 
         
     });

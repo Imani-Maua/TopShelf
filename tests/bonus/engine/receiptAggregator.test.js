@@ -1,4 +1,4 @@
-const ReceiptAggregator = require('../../domain/ReceiptAggregator');
+const ReceiptAggregator = require('../../../core/bonus/engine/receiptAggregator');
 
 
 describe('ReceiptAggregator', ()=> {

@@ -1,5 +1,4 @@
-const TierConfig = require('../../domain/TierConfig');
-
+const TierConfig = require('../../../core/bonus/engine/tierConfig');
 
 describe('TierConfig', ()=>{
 
