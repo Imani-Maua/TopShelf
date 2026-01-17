@@ -1,4 +1,4 @@
-const BonusPayouts = require('../../domain/BonusPayouts');
+const BonusPayouts = require('../../../core/bonus/engine/bonusPayouts');
 
 describe('BonusPayouts', ()=>{
     test('calculates total bonus per seller using category calculators', ()=>{
@@ -14,7 +14,7 @@ describe('BonusPayouts', ()=>{
             cocktail: cocktailCalculator
         };
 
-        const bonusPayouts = new BonusPayouts(calculators);
+        const testBonusPayouts = new BonusPayouts(calculators);
 
 
         const aggregatedSales = {
@@ -28,7 +28,7 @@ describe('BonusPayouts', ()=>{
             }
         };
 
-        const payouts = bonusPayouts.calculateBonuses(aggregatedSales);
+        const payouts = testBonusPayouts.calculateBonuses(aggregatedSales);
 
         expect(payouts).toEqual([
             {seller: 'Alice', totalBonus: 150}
@@ -55,7 +55,7 @@ describe('BonusPayouts', ()=>{
             steak: steakCalculator,
             cocktail: cocktailCalculator
         };
-        const bonusPayouts = new BonusPayouts(calculators);
+        const testBonusPayouts = new BonusPayouts(calculators);
 
         const aggregatedSales = {
             Alice: {
@@ -71,7 +71,7 @@ describe('BonusPayouts', ()=>{
             }
         };
 
-        const payouts = bonusPayouts.calculateBonuses(aggregatedSales);
+        const payouts = testBonusPayouts.calculateBonuses(aggregatedSales);
 
         expect(payouts).toEqual([
             {seller: 'Alice', totalBonus: 175}

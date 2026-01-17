@@ -1,5 +1,4 @@
-const ForecastChecker = require('../../domain/ForecastChecker');
-
+const ForecastChecker = require('../../../core/bonus/engine/forecastChecker');
 
 describe('ForecastChecker', ()=>{
 test('returns true when revenue is above threshold', () => {
@@ -27,4 +26,3 @@ test('returns true when monthly forecast is zero', ()=>{
     expect(checker.isForecastMet(3000)).toBe(true)
 });
 })
-

@@ -1,6 +1,5 @@
-const BonusCalculator = require('../../domain/BonusCalculator');
-const TierConfig = require('../../domain/TierConfig');
-
+const BonusCalculator = require('../../../core/bonus/engine/bonusCalculator');
+const TierConfig = require('../../../core/bonus/engine/tierConfig');
 
 describe('BonusCalculator', ()=> {
 
@@ -37,7 +36,7 @@ describe('BonusCalculator', ()=> {
 
         expect(()=>{
             new BonusCalculator({
-                tierConfig: {},
+                testTierConfig: {},
                 mode: 'PER ITEM'
             })
         }).toThrow('category is required');
