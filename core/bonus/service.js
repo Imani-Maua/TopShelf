@@ -5,7 +5,6 @@ const prisma = new PrismaClient();
 
 // Engine Imports
 const ReceiptParser = require('./engine/receiptParser');
-const TierConfig = require('./engine/tierConfig');
 const BonusCalculator = require('./engine/bonusCalculator');
 const ForecastChecker = require('./engine/forecastChecker');
 
