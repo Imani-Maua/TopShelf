@@ -3,7 +3,8 @@
 class BonusController{
     /**
      * 
-     * @param {class} bonusService | BonusService is the class that combines all the domain logic and gives us a final calculation of bonuses for all employees
+     * @param {class} bonusService | BonusService is the class that orchestrates all the domain logic 
+     * and gives us a final calculation of bonuses for all employees
      */
     constructor(bonusService){
         this.bonusService = bonusService;
