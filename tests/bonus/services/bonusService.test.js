@@ -156,4 +156,185 @@ describe('BonusService.calculateAllBonuses', () => {
             }
         ]);
     });
+
+    test('handles multiple receipts from same participant in same category', async () => {
+        prisma.forecast.findFirst.mockResolvedValue({
+            threshold: 0.8,
+            targetAmount: 10000
+        });
+
+        ForecastChecker.mockImplementation(() => ({
+            isForecastMet: () => true
+        }));
+
+        // Multiple receipts from Alice in steak category
+        prisma.receipt.findMany.mockResolvedValue([
+            {
+                participantId: 'p1',
+                participant: { firstname: 'Alice', lastname: 'Smith' },
+                product: {
+                    categoryId: 'c1',
+                    category: { name: 'steak' }
+                }
+            },
+            {
+                participantId: 'p1',
+                participant: { firstname: 'Alice', lastname: 'Smith' },
+                product: {
+                    categoryId: 'c1',
+                    category: { name: 'steak' }
+                }
+            }
+        ]);
+
+        prisma.category.findMany.mockResolvedValue([
+            {
+                id: 'c1',
+                name: 'steak',
+                mode: 'PER CATEGORY',
+                tierRules: []
+            }
+        ]);
+
+        formatDataForCalculation.mockReturnValue([
+            { quantity: 1, revenue: 50 }
+        ]);
+
+        BonusPayouts.mockImplementation(() => ({
+            calculateBonuses: () => ([
+                {
+                    seller: 'p1',
+                    totalBonus: 100,
+                    breakdown: [{ category: 'steak', bonus: 100 }]
+                }
+            ])
+        }));
+
+        const result = await service.calculateAllBonuses(1, 2026, 15000);
+
+        expect(result.forecastMet).toBe(true);
+        expect(result.payouts).toHaveLength(1);
+        expect(result.payouts[0].participant.id).toBe('p1');
+    });
+
+    test('handles same participant selling in multiple categories', async () => {
+        prisma.forecast.findFirst.mockResolvedValue({
+            threshold: 0.8,
+            targetAmount: 10000
+        });
+
+        ForecastChecker.mockImplementation(() => ({
+            isForecastMet: () => true
+        }));
+
+        // Alice sells both steaks and cocktails
+        prisma.receipt.findMany.mockResolvedValue([
+            {
+                participantId: 'p1',
+                participant: { firstname: 'Alice', lastname: 'Smith' },
+                product: {
+                    categoryId: 'c1',
+                    category: { name: 'steak' }
+                }
+            },
+            {
+                participantId: 'p1',
+                participant: { firstname: 'Alice', lastname: 'Smith' },
+                product: {
+                    categoryId: 'c2',
+                    category: { name: 'cocktail' }
+                }
+            }
+        ]);
+
+        prisma.category.findMany.mockResolvedValue([
+            {
+                id: 'c1',
+                name: 'steak',
+                mode: 'PER CATEGORY',
+                tierRules: []
+            },
+            {
+                id: 'c2',
+                name: 'cocktail',
+                mode: 'PER ITEM',
+                tierRules: []
+            }
+        ]);
+
+        formatDataForCalculation.mockReturnValue([
+            { quantity: 1, revenue: 50 }
+        ]);
+
+        BonusPayouts.mockImplementation(() => ({
+            calculateBonuses: () => ([
+                {
+                    seller: 'p1',
+                    totalBonus: 150,
+                    breakdown: [
+                        { category: 'steak', bonus: 100 },
+                        { category: 'cocktail', bonus: 50 }
+                    ]
+                }
+            ])
+        }));
+
+        const result = await service.calculateAllBonuses(1, 2026, 15000);
+
+        expect(result.forecastMet).toBe(true);
+        expect(result.payouts).toHaveLength(1);
+        expect(result.payouts[0].breakdown).toHaveLength(2);
+    });
+
+    test('handles formatDataForCalculation returning single object (not array)', async () => {
+        prisma.forecast.findFirst.mockResolvedValue({
+            threshold: 0.8,
+            targetAmount: 10000
+        });
+
+        ForecastChecker.mockImplementation(() => ({
+            isForecastMet: () => true
+        }));
+
+        prisma.receipt.findMany.mockResolvedValue([
+            {
+                participantId: 'p1',
+                participant: { firstname: 'Alice', lastname: 'Smith' },
+                product: {
+                    categoryId: 'c1',
+                    category: { name: 'steak' }
+                }
+            }
+        ]);
+
+        prisma.category.findMany.mockResolvedValue([
+            {
+                id: 'c1',
+                name: 'steak',
+                mode: 'PER CATEGORY',
+                tierRules: []
+            }
+        ]);
+
+        // Return single object instead of array (PER CATEGORY mode)
+        formatDataForCalculation.mockReturnValue(
+            { quantity: 5, revenue: 500, tier: { minQuantity: 5, bonusPercentage: 0.10 } }
+        );
+
+        BonusPayouts.mockImplementation(() => ({
+            calculateBonuses: () => ([
+                {
+                    seller: 'p1',
+                    totalBonus: 50,
+                    breakdown: [{ category: 'steak', bonus: 50 }]
+                }
+            ])
+        }));
+
+        const result = await service.calculateAllBonuses(1, 2026, 15000);
+
+        expect(result.forecastMet).toBe(true);
+        expect(result.payouts).toHaveLength(1);
+    });
 });
+

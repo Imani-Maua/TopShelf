@@ -48,15 +48,15 @@ class ParsingService{
             }
 
             if(!productId){
-                errors.push({row: records.row, message: `Unknown Product: "${record.itemName}". Ensure component exists in catalog.`});
+                errors.push({row: records.row, message: `Unknown Product: "${records.itemName}". Ensure component exists in catalog.`});
                 continue;
             }
 
             receiptsToSave.push({
                 participantId: participantId,
                 productId: productId,
-                date: record.saleDate,
-                price: record.price
+                date: records.saleDate,
+                price: records.price
             });
                 
         }

@@ -78,3 +78,4 @@ describe('ReceiptParser', () => {
         ).rejects.toThrow(/Unsupported file type/);
     });
 });
+
