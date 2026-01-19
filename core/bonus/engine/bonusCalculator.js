@@ -10,25 +10,53 @@ class BonusCalculator {
 
     /**
      * Calculates total bonus based on prepared sales data
-     * @param {Array<{quantity: Number, revenue: Number, tier: {minQuantity: Number, bonusPercentage: Number} | null}>} salesData
-     * @returns {Number} total bonus
+     * @param {Array<{productName, quantity, revenue, tier, products}>} salesData
+     * @returns {Object} {totalBonus: Number, items: Array}
      */
     calculateBonus(salesData) {
-        if (!Array.isArray(salesData) || salesData.length === 0) return 0;
-
-        let totalBonus = 0;
-
-        for (const sale of salesData) {
-            const { quantity, revenue, tier } = sale;
-
-            // Skip if no tier applies
-            if (!tier || typeof tier.bonusPercentage !== 'number') continue;
-
-            // Bonus = revenue * bonusPercentage / 100
-            totalBonus += revenue * tier.bonusPercentage;
+        if (!Array.isArray(salesData) || salesData.length === 0) {
+            return { totalBonus: 0, items: [] };
         }
 
-        return totalBonus;
+        let totalBonus = 0;
+        const items = [];
+
+        for (const sale of salesData) {
+            const { productName, quantity, revenue, tier, products } = sale;
+
+            let qualified = false;
+            let reason = null;
+            let bonus = 0;
+            let tierQualified = null;
+            let bonusPercentage = 0;
+
+            if (tier && typeof tier.bonusPercentage === 'number' && tier.bonusPercentage > 0) {
+                // Qualified for bonus!
+                qualified = true;
+                bonus = revenue * tier.bonusPercentage / 100;
+                tierQualified = `${tier.minQuantity}+ items`;
+                bonusPercentage = tier.bonusPercentage;
+                totalBonus += bonus;
+            } else {
+                // Didn't qualify - explain why
+                qualified = false;
+                reason = `Need 5+ items to qualify (sold ${quantity})`;
+            }
+
+            items.push({
+                productName,
+                quantity,
+                revenue,
+                tierQualified,
+                bonusPercentage,
+                bonus,
+                qualified,
+                reason,
+                products  // For PER_CATEGORY mode
+            });
+        }
+
+        return { totalBonus, items };
     }
 }
 
