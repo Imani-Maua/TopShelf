@@ -34,10 +34,14 @@ class BonusPayouts {
                 const calculator = this.calculators[category];
                 if (!calculator) continue;
 
-                const categoryBonus = calculator.calculateBonus(salesData);
-                if (categoryBonus > 0) {
-                    totalBonus += categoryBonus;
-                    breakdown.push({ category, bonus: categoryBonus });
+                const result = calculator.calculateBonus(salesData);
+                if (result.totalBonus > 0) {
+                    totalBonus += result.totalBonus;
+                    breakdown.push({
+                        category,
+                        bonus: result.totalBonus,
+                        items: result.items
+                    });
                 }
             }
 
