@@ -1,13 +1,15 @@
 const formatDataForCalculation = (receipts, mode, tiers) => {
-    if (mode === 'PER CATEGORY') {
+    if (mode === 'PER_CATEGORY') {
         return {
+            productName: null,  // Not applicable for category mode
             quantity: receipts.length,
             revenue: receipts.reduce((sum, r) => sum + r.price, 0),
-            tier: getApplicableTier(receipts.length, tiers)
+            tier: getApplicableTier(receipts.length, tiers),
+            products: receipts.map(r => r.product.name)  // List all products sold
         };
     }
 
-    if (mode === 'PER ITEM') {
+    if (mode === 'PER_ITEM') {
         const salesMap = {};
         for (const receipt of receipts) {
             const name = receipt.product.name;
@@ -15,8 +17,10 @@ const formatDataForCalculation = (receipts, mode, tiers) => {
             salesMap[name].quantity += 1;
             salesMap[name].revenue += receipt.price;
         }
-        return Object.values(salesMap).map(sale => ({
-            ...sale,
+        return Object.entries(salesMap).map(([productName, sale]) => ({
+            productName,  // Include product name
+            quantity: sale.quantity,
+            revenue: sale.revenue,
             tier: getApplicableTier(sale.quantity, tiers)
         }));
     }
