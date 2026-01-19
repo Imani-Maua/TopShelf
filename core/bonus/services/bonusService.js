@@ -1,7 +1,7 @@
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
-const {formatDataForCalculation} = require('./utils');
+const { formatDataForCalculation } = require('./utils');
 const BonusCalculator = require('../engine/bonusCalculator');
 const ForecastChecker = require('../engine/forecastChecker');
 const BonusPayouts = require('../engine/bonusPayouts');
@@ -58,22 +58,36 @@ class BonusService {
         });
 
         // Aggregate sales per participant per category
-        const aggregatedSales = {}; // participantId -> categoryName -> [salesData]
+        const aggregatedReceipts = {}; // participantId -> categoryName -> [receipts]
         const participantsMap = {}; // participantId -> name
+
         for (const receipt of receipts) {
             const pid = receipt.participantId;
             const categoryName = receipt.product.category.name;
-            const category = categories.find(category => category.id === receipt.product.categoryId);
 
-            if (!aggregatedSales[pid]) aggregatedSales[pid] = {};
-            if (!aggregatedSales[pid][categoryName]) aggregatedSales[pid][categoryName] = [];
+            if (!aggregatedReceipts[pid]) aggregatedReceipts[pid] = {};
+            if (!aggregatedReceipts[pid][categoryName]) aggregatedReceipts[pid][categoryName] = [];
 
-            const salesData = formatDataForCalculation([receipt], category.mode, category.tierRules);
-            const salesArray = Array.isArray(salesData) ? salesData : [salesData];
-            aggregatedSales[pid][categoryName].push(...salesArray);
+            aggregatedReceipts[pid][categoryName].push(receipt);
 
             if (!participantsMap[pid]) {
                 participantsMap[pid] = `${receipt.participant.firstname} ${receipt.participant.lastname}`;
+            }
+        }
+
+        // Now format the aggregated data for calculation
+        const aggregatedSales = {};
+        for (const pid in aggregatedReceipts) {
+            aggregatedSales[pid] = {};
+            for (const categoryName in aggregatedReceipts[pid]) {
+                const receiptsForCategory = aggregatedReceipts[pid][categoryName];
+                const category = categories.find(c => c.name === categoryName);
+
+                if (category) {
+                    const salesData = formatDataForCalculation(receiptsForCategory, category.mode, category.tierRules);
+                    const salesArray = Array.isArray(salesData) ? salesData : [salesData];
+                    aggregatedSales[pid][categoryName] = salesArray;
+                }
             }
         }
 
@@ -98,7 +112,7 @@ class BonusService {
         };
     }
 
-    
+
 
 
 }
