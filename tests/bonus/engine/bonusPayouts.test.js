@@ -24,7 +24,10 @@ describe('BonusPayouts', () => {
             }
         };
         const payouts = new BonusPayouts(mockCalculators);
-        expect(payouts.calculateBonuses(aggregatedSales)).toEqual([]);
+        // Should include the participant with 0 bonus and empty breakdown when no categories have calculators
+        expect(payouts.calculateBonuses(aggregatedSales)).toEqual([
+            { seller: 'Alice', totalBonus: 0, breakdown: [] }
+        ]);
     });
 
     test('calculates total bonus and breakdown correctly', () => {
@@ -71,7 +74,7 @@ describe('BonusPayouts', () => {
 
     });
 
-    test('ignores categories with zero bonus', () => {
+    test('includes categories with zero bonus for audit purposes', () => {
         mockCalculators.steak.calculateBonus.mockReturnValue({ totalBonus: 0, items: [] });
         mockCalculators.cocktail.calculateBonus.mockReturnValue({ totalBonus: 0, items: [] });
 
@@ -83,7 +86,16 @@ describe('BonusPayouts', () => {
         };
 
         const payouts = new BonusPayouts(mockCalculators);
-        expect(payouts.calculateBonuses(aggregatedSales)).toEqual([]);
+        expect(payouts.calculateBonuses(aggregatedSales)).toEqual([
+            {
+                seller: 'Alice',
+                totalBonus: 0,
+                breakdown: [
+                    { category: 'steak', bonus: 0, items: [] },
+                    { category: 'cocktail', bonus: 0, items: [] }
+                ]
+            }
+        ]);
     });
 
     test('sorts payouts by totalBonus descending', () => {
