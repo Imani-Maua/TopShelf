@@ -11,22 +11,41 @@ jobs:
   test:
     runs-on: ubuntu-latest
 
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x, 22.x]
 
     steps:
-  
       - name: Checkout repository
         uses: actions/checkout@v4
-    
-    
-      - name: Setup Node.js
+
+      - name: Setup Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v4
         with: 
-          node-version: 22
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+
       - name: Install dependencies
-        run: npm install
-      
+        run: npm ci
+
+      - name: Sync Database Schema
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: npx prisma db push --skip-generate
+
       - name: Run tests
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: npm test
+
+      - name: Upload coverage reports
+        uses: codecov/codecov-action@v3
+        if: matrix.node-version == '20.x'
+        with:
+          files: ./coverage/lcov.info
+          flags: unittests
+          name: codecov-umbrella
+          fail_ci_if_error: false
 
 
 
