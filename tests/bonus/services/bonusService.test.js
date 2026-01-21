@@ -41,7 +41,7 @@ describe('BonusService.calculateAllBonuses', () => {
 
         await expect(
             service.calculateAllBonuses(1, 2026, 10000)
-        ).rejects.toThrow(/No forecast configured/);
+        ).rejects.toThrow(/Forecast not found/);
     });
 
     test('returns early if forecast is not met', async () => {
