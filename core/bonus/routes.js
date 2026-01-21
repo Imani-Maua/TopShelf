@@ -26,6 +26,14 @@ bonus.post('/calculate', validateBonusCalculation, async (req, res) => {
 
     } catch (error) {
         console.error('Error calculating bonuses:', error);
+
+        if (error.message.includes('Forecast not found')) {
+            return res.status(404).json({
+                error: 'Not Found',
+                message: error.message
+            });
+        }
+
         res.status(500).json({
             error: 'Failed to calculate bonuses',
             message: error.message

@@ -23,7 +23,7 @@ class BonusService {
         });
 
         if (!forecast)
-            throw new Error(`No forecast configured for ${month}/${year}`);
+            throw new Error(`Forecast not found for ${month}/${year}`);
 
         const checker = new ForecastChecker(forecast.threshold, forecast.targetAmount);
 

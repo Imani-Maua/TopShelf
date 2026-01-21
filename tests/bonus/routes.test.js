@@ -255,10 +255,10 @@ describe('Bonus Calculation API', () => {
             const response = await request(app)
                 .post('/api/bonuses/calculate')
                 .send(requestBody)
-                .expect(500);
+                .expect(404);
 
-            expect(response.body.error).toBe('Failed to calculate bonuses');
-            expect(response.body.message).toContain('No forecast');
+            expect(response.body.error).toBe('Not Found');
+            expect(response.body.message).toContain('Forecast not found');
         });
     });
 
