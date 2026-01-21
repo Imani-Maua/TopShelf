@@ -1,107 +1,117 @@
-# 🍸 TopShelf
+# TopShelf: Upsell Bonus Calculation System
 
-TopShelf is a sophisticated backend engine designed to automate and audit performance-based bonuses for sales staff. It processes sales receipts from POS systems, evaluates them against dynamic logic rules (gamification), and generates detailed financial payout reports.
+TopShelf is a high-performance, modular REST API built to manage and calculate upsell bonuses for restaurant and retail environments. It handles everything from participant management to complex tiered bonus calculations with full audit transparency.
 
-## 🚀 Key Features
+## 🚀 Features
 
-*   **Intelligent Bonus Engine**: Calculates payouts based on complex, multi-tiered logic.
-    *   **Per-Item Mode**: Target specific high-value items (e.g., "Sell 5 Wagyu Steaks to unlock 10%").
-    *   **Per-Category Mode**: Volume-based targets (e.g., "Sell any 20 Cocktails to unlock 15%").
-*   **Audit-Grade Transparency**: The engine provides a detailed JSON breakdown explain *exactly* why a bonus was earned (or why it was denied) down to the individual receipt level.
-*   **Forecast Gating**: Bonuses are automatically locked if the establishment's monthly revenue target is not met.
-*   **Single Source of Truth**: Receipts are ingested via CSV and exposed via a read-only API to ensure financial integrity.
-*   **Dynamic Configuration**: Managers can adjust tiers, percentages, and categories on the fly via API without redeploying code.
+- **Custom Bonus Engine**: 
+  - Dynamic tiered bonus structures.
+  - Supports `PER_ITEM` (bonus per product sold) and `PER_CATEGORY` (bonus based on total category volume) modes.
+  - **Audit Log Transparency**: Provides detailed breakdowns, including explanations for participants who didn't meet thresholds.
+- **Strict Data Validation**:
+  - **Monotonic Progression**: Tier rules automatically enforced to ensure higher quantities always yield higher bonus percentages.
+  - **Category Integration**: Business rules prevent deletion of categories with active products and enforce minimum tier rules.
+- **Robust API Coverage**: Full CRUD for Participants, Categories, Products, Tier Rules, and Forecasts.
+- **Read-Only Receipt Tracking**: Historical sales data integrity is maintained with read-only receipt endpoints.
+- **Comprehensive Testing**: 180+ automated tests covering every endpoint and business logic edge case.
 
-## 🛠️ Tech Stack
+## 🛠 Tech Stack
 
-*   **Runtime**: Node.js
-*   **Framework**: Express.js
-*   **Database**: MongoDB
-*   **ORM**: Prisma
-*   **Testing**: Jest
+- **Runtime**: [Node.js](https://nodejs.org/) (v18+)
+- **Framework**: [Express.js](https://expressjs.com/)
+- **ORM**: [Prisma](https://www.prisma.io/)
+- **Database**: [MongoDB](https://www.mongodb.com/)
+- **Testing**: [Jest](https://jestjs.io/) & [Supertest](https://github.com/ladjs/supertest)
+- **CI/CD**: GitHub Actions
 
-## 🏁 Getting Started
+## 📁 Project Structure
+
+```text
+├── core/                   # Modularized business logic (one folder per resource)
+│   ├── bonus/              # Bonus calculation engine and services
+│   ├── participants/       # Participant management logic
+│   ├── categories/         # Category definitions and bonus modes
+│   ├── products/           # Product catalog logic
+│   ├── tier-rules/         # Tiered bonus logic
+│   ├── forecasts/          # Target and threshold settings
+│   └── receipts/           # Read-only history logic
+├── prisma/                 # Prisma schema, seeds, and migrations
+├── src/                    # Application entry points (app.js, server.js)
+└── tests/                  # Automated test suites (mirrors core structure)
+    ├── bonus/
+    ├── categories/
+    ├── forecasts/
+    ├── participants/
+    ├── products/
+    ├── receipts/
+    └── tier-rules/
+```
+
+## 🛠 Getting Started
 
 ### Prerequisites
 
-*   Node.js (v18+)
-*   MongoDB (Local or Atlas connection string)
+- Node.js installed
+- MongoDB instance (local or Atlas)
+- `.env` file with `DATABASE_URL`
+
+### 🔑 Environment Variables
+
+To run this project, you will need to add the following environment variables to your `.env` file:
+
+`DATABASE_URL` - Your MongoDB connection string (e.g., `mongodb+srv://...`)
+
+`PORT` - (Optional) Port to run the server on (Default: `3000`)
+
+`NODE_ENV` - Set to `development` or `production`
 
 ### Installation
 
-1.  **Clone the repository**
-    ```bash
-    git clone https://github.com/yourusername/topshelf.git
-    cd topshelf
-    ```
+1. **Clone the repository**:
+   ```bash
+   git clone <repository-url>
+   cd TopShelf
+   ```
 
-2.  **Install dependencies**
-    ```bash
-    npm install
-    ```
+2. **Install dependencies**:
+   ```bash
+   npm install
+   ```
 
-3.  **Environment Setup**
-    Create a `.env` file in the root directory:
-    ```env
-    DATABASE_URL="mongodb+srv://..."
-    PORT=3000
-    NODE_ENV="development"
-    ```
+3. **Setup Database**:
+   ```bash
+   npx prisma generate
+   npx prisma db push
+   npm run prisma:seed # Optional: Populate with sample data
+   ```
 
-4.  **Database Sync**
-    ```bash
-    npx prisma generate
-    npx prisma db push
-    ```
-
-### Running the Server
-
-```bash
-# Development mode (starts server on port 3000)
-npm start
-```
-
-## 🏗️ Architecture
-
-The application uses a modular architecture within the `core/` directory:
-
-*   **`core/bonus/`**: The heart of the system. Contains the `BonusCalculator` engine and ingestion logic.
-*   **`core/receipts/`**: Read-only interface for querying sales data.
-*   **`core/tier-rules/`**: Logic definitions (e.g., "Bronze Tier = 5 items").
-*   **`core/categories/`**: Configuration for sales groups (Steaks, Wines).
-*   **`core/participants/`**: Staff management.
-*   **`core/forecasts/`**: Revenue target gating configuration.
-
-## 🔌 API Overview
-
-### **Bonus Engine**
-*   `POST /api/bonuses/calculate`: Triggers the engine for a specific month/year. Returns a detailed payout report.
-*   `POST /api/bonuses/upload-receipts`: Ingests a CSV file of sales data.
-
-### **Receipts (Read-Only)**
-*   `GET /api/receipts`: Advanced filtering (Date, Staff, Category, Price) to view the raw data.
-*   `GET /api/receipts/stats/summary`: Aggregated statistics for dashboards.
-
-### **Configuration**
-*   `GET/POST /api/tier-rules`: Create "games" for staff (e.g., strictly increasing targets).
-*   `GET/POST /api/categories`: Define how groups of products behave (`PER_ITEM` vs `PER_CATEGORY`).
-
-## 🧠 Logic Modes Explained
-
-### 1. PER_ITEM Mode
-*   **Use Case**: High-ticket items (e.g., Steaks, Champagne).
-*   **Logic**: The seller must sell threshold $X$ of a *specific product* to trigger the bonus for that product.
-*   *Example*: Selling 4 Ribeyes and 4 Wagyus might result in $0 bonus if the threshold is 5.
-
-### 2. PER_CATEGORY Mode
-*   **Use Case**: High-volume items (e.g., Cocktails, Appetizers).
-*   **Logic**: The seller's total count of *all items in this category* counts toward the threshold.
-*   *Example*: Selling 1 Martini + 4 Mojitos = 5 items. If threshold is 5, bonus is unlocked for all revenue.
+4. **Start the server**:
+   ```bash
+   npm start
+   ```
+   The API will be available at `http://localhost:3000`.
 
 ## 🧪 Testing
 
-Run the comprehensive test suite to validate logic and API endpoints:
+The project maintains high stability via a suite of 185 tests.
 
-```bash
-npm test
-```
+- **Run all tests**: `npm test`
+- **View coverage**: `npm test -- --coverage`
+
+### Key Endpoints
+
+| Resource | Methods | Description |
+| :--- | :--- | :--- |
+| `/api/participants` | GET, POST, PUT, DELETE | Manage sellers/staff |
+| `/api/categories` | GET, POST, PUT, DELETE | Product groups & bonus modes |
+| `/api/products` | GET, POST, PUT, DELETE | Individual item management |
+| `/api/bonus/calculate` | POST | Trigger bonus math for a period |
+| `/api/receipts` | GET | View historical sales (Read-Only) |
+
+## 🛡 CI/CD
+
+Automated testing is integrated via **GitHub Actions**. Every Push and Pull Request triggers the full test suite across multiple Node.js versions to ensure zero regressions.
+
+---
+
+**Developed by Maua Imani**
