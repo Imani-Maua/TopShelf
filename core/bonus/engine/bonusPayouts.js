@@ -35,19 +35,17 @@ class BonusPayouts {
                 if (!calculator) continue;
 
                 const result = calculator.calculateBonus(salesData);
-                if (result.totalBonus > 0) {
-                    totalBonus += result.totalBonus;
-                    breakdown.push({
-                        category,
-                        bonus: result.totalBonus,
-                        items: result.items
-                    });
-                }
+                // Include all breakdowns, even if totalBonus is 0, for audit purposes
+                totalBonus += result.totalBonus;
+                breakdown.push({
+                    category,
+                    bonus: result.totalBonus,
+                    items: result.items
+                });
             }
 
-            if (totalBonus > 0) {
-                payouts.push({ seller, totalBonus, breakdown });
-            }
+            // Include all participants with sales activity, even if totalBonus is 0
+            payouts.push({ seller, totalBonus, breakdown });
         }
 
         return payouts.sort((a, b) => b.totalBonus - a.totalBonus);

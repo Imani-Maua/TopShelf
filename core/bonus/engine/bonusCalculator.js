@@ -40,7 +40,7 @@ class BonusCalculator {
             } else {
                 // Didn't qualify - explain why
                 qualified = false;
-                reason = `Need 5+ items to qualify (sold ${quantity})`;
+                reason = `Below minimum threshold (sold ${quantity})`;
             }
 
             items.push({
