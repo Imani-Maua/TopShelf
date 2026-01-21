@@ -3,9 +3,9 @@ const formatDataForCalculation = (receipts, mode, tiers) => {
         return {
             productName: null,  // Not applicable for category mode
             quantity: receipts.length,
-            revenue: receipts.reduce((sum, r) => sum + r.price, 0),
+            revenue: receipts.reduce((sum, receipt) => sum + receipt.price, 0),
             tier: getApplicableTier(receipts.length, tiers),
-            products: receipts.map(r => r.product.name)  // List all products sold
+            products: receipts.map(receipt => receipt.product.name)  // List all products sold
         };
     }
 

@@ -97,93 +97,103 @@ describe('services/utils', () => {
 
             test('aggregates all receipts into single object with total quantity and revenue', () => {
                 const receipts = [
-                    { price: 50.00 },
-                    { price: 75.50 },
-                    { price: 30.00 }
+                    { product: { name: 'Ribeye Steak' }, price: 50.00 },
+                    { product: { name: 'Filet Mignon' }, price: 75.50 },
+                    { product: { name: 'NY Strip' }, price: 30.00 }
                 ];
                 const tiers = [
                     { minQuantity: 2, bonusPercentage: 0.10 },
                     { minQuantity: 5, bonusPercentage: 0.15 }
                 ];
 
-                const result = formatDataForCalculation(receipts, 'PER CATEGORY', tiers);
+                const result = formatDataForCalculation(receipts, 'PER_CATEGORY', tiers);
 
                 expect(result).toEqual({
+                    productName: null,
                     quantity: 3,
                     revenue: 155.50,
-                    tier: { minQuantity: 2, bonusPercentage: 0.10 }
+                    tier: { minQuantity: 2, bonusPercentage: 0.10 },
+                    products: expect.any(Array)
                 });
             });
 
             test('returns correct tier based on receipt count', () => {
                 const receipts = [
-                    { price: 50.00 },
-                    { price: 50.00 },
-                    { price: 50.00 },
-                    { price: 50.00 },
-                    { price: 50.00 },
-                    { price: 50.00 }
+                    { product: { name: 'Steak' }, price: 50.00 },
+                    { product: { name: 'Steak' }, price: 50.00 },
+                    { product: { name: 'Steak' }, price: 50.00 },
+                    { product: { name: 'Steak' }, price: 50.00 },
+                    { product: { name: 'Steak' }, price: 50.00 },
+                    { product: { name: 'Steak' }, price: 50.00 }
                 ];
                 const tiers = [
                     { minQuantity: 2, bonusPercentage: 0.10 },
                     { minQuantity: 5, bonusPercentage: 0.15 }
                 ];
 
-                const result = formatDataForCalculation(receipts, 'PER CATEGORY', tiers);
+                const result = formatDataForCalculation(receipts, 'PER_CATEGORY', tiers);
 
                 expect(result).toEqual({
+                    productName: null,
                     quantity: 6,
                     revenue: 300.00,
-                    tier: { minQuantity: 5, bonusPercentage: 0.15 }
+                    tier: { minQuantity: 5, bonusPercentage: 0.15 },
+                    products: expect.any(Array)
                 });
             });
 
             test('handles single receipt', () => {
                 const receipts = [
-                    { price: 100.00 }
+                    { product: { name: 'Steak' }, price: 100.00 }
                 ];
                 const tiers = [
                     { minQuantity: 1, bonusPercentage: 0.05 }
                 ];
 
-                const result = formatDataForCalculation(receipts, 'PER CATEGORY', tiers);
+                const result = formatDataForCalculation(receipts, 'PER_CATEGORY', tiers);
 
                 expect(result).toEqual({
+                    productName: null,
                     quantity: 1,
                     revenue: 100.00,
-                    tier: { minQuantity: 1, bonusPercentage: 0.05 }
+                    tier: { minQuantity: 1, bonusPercentage: 0.05 },
+                    products: expect.any(Array)
                 });
             });
 
             test('returns null tier when no tier applies', () => {
                 const receipts = [
-                    { price: 50.00 }
+                    { product: { name: 'Steak' }, price: 50.00 }
                 ];
                 const tiers = [
                     { minQuantity: 5, bonusPercentage: 0.15 }
                 ];
 
-                const result = formatDataForCalculation(receipts, 'PER CATEGORY', tiers);
+                const result = formatDataForCalculation(receipts, 'PER_CATEGORY', tiers);
 
                 expect(result).toEqual({
+                    productName: null,
                     quantity: 1,
                     revenue: 50.00,
-                    tier: null
+                    tier: null,
+                    products: expect.any(Array)
                 });
             });
 
             test('handles empty tiers array', () => {
                 const receipts = [
-                    { price: 50.00 },
-                    { price: 50.00 }
+                    { product: { name: 'Steak' }, price: 50.00 },
+                    { product: { name: 'Steak' }, price: 50.00 }
                 ];
 
-                const result = formatDataForCalculation(receipts, 'PER CATEGORY', []);
+                const result = formatDataForCalculation(receipts, 'PER_CATEGORY', []);
 
                 expect(result).toEqual({
+                    productName: null,
                     quantity: 2,
                     revenue: 100.00,
-                    tier: null
+                    tier: null,
+                    products: expect.any(Array)
                 });
             });
         });
@@ -203,17 +213,19 @@ describe('services/utils', () => {
                     { minQuantity: 3, bonusPercentage: 0.15 }
                 ];
 
-                const result = formatDataForCalculation(receipts, 'PER ITEM', tiers);
+                const result = formatDataForCalculation(receipts, 'PER_ITEM', tiers);
 
                 expect(result).toHaveLength(2);
                 expect(result).toEqual(
                     expect.arrayContaining([
                         {
+                            productName: 'Ribeye Steak',
                             quantity: 2,
                             revenue: 105.00,
                             tier: { minQuantity: 2, bonusPercentage: 0.10 }
                         },
                         {
+                            productName: 'Mojito',
                             quantity: 3,
                             revenue: 36.00,
                             tier: { minQuantity: 3, bonusPercentage: 0.15 }
@@ -232,10 +244,11 @@ describe('services/utils', () => {
                     { minQuantity: 2, bonusPercentage: 0.10 }
                 ];
 
-                const result = formatDataForCalculation(receipts, 'PER ITEM', tiers);
+                const result = formatDataForCalculation(receipts, 'PER_ITEM', tiers);
 
                 expect(result).toHaveLength(1);
                 expect(result[0]).toEqual({
+                    productName: 'Ribeye Steak',
                     quantity: 3,
                     revenue: 150.00,
                     tier: { minQuantity: 2, bonusPercentage: 0.10 }
@@ -252,14 +265,14 @@ describe('services/utils', () => {
                     { minQuantity: 1, bonusPercentage: 0.05 }
                 ];
 
-                const result = formatDataForCalculation(receipts, 'PER ITEM', tiers);
+                const result = formatDataForCalculation(receipts, 'PER_ITEM', tiers);
 
                 expect(result).toHaveLength(3);
                 expect(result).toEqual(
                     expect.arrayContaining([
-                        { quantity: 1, revenue: 50.00, tier: { minQuantity: 1, bonusPercentage: 0.05 } },
-                        { quantity: 1, revenue: 12.00, tier: { minQuantity: 1, bonusPercentage: 0.05 } },
-                        { quantity: 1, revenue: 8.00, tier: { minQuantity: 1, bonusPercentage: 0.05 } }
+                        { productName: 'Ribeye Steak', quantity: 1, revenue: 50.00, tier: { minQuantity: 1, bonusPercentage: 0.05 } },
+                        { productName: 'Mojito', quantity: 1, revenue: 12.00, tier: { minQuantity: 1, bonusPercentage: 0.05 } },
+                        { productName: 'Tiramisu', quantity: 1, revenue: 8.00, tier: { minQuantity: 1, bonusPercentage: 0.05 } }
                     ])
                 );
             });
@@ -279,7 +292,7 @@ describe('services/utils', () => {
                     { minQuantity: 5, bonusPercentage: 0.15 }
                 ];
 
-                const result = formatDataForCalculation(receipts, 'PER ITEM', tiers);
+                const result = formatDataForCalculation(receipts, 'PER_ITEM', tiers);
 
                 expect(result).toHaveLength(2);
 
@@ -287,12 +300,14 @@ describe('services/utils', () => {
                 const cocktailResult = result.find(r => r.revenue === 50.00);
 
                 expect(steakResult).toEqual({
+                    productName: 'Steak',
                     quantity: 2,
                     revenue: 100.00,
                     tier: { minQuantity: 2, bonusPercentage: 0.10 }
                 });
 
                 expect(cocktailResult).toEqual({
+                    productName: 'Cocktail',
                     quantity: 5,
                     revenue: 50.00,
                     tier: { minQuantity: 5, bonusPercentage: 0.15 }
@@ -307,10 +322,11 @@ describe('services/utils', () => {
                     { minQuantity: 5, bonusPercentage: 0.15 }
                 ];
 
-                const result = formatDataForCalculation(receipts, 'PER ITEM', tiers);
+                const result = formatDataForCalculation(receipts, 'PER_ITEM', tiers);
 
                 expect(result).toHaveLength(1);
                 expect(result[0]).toEqual({
+                    productName: 'Steak',
                     quantity: 1,
                     revenue: 50.00,
                     tier: null
@@ -318,7 +334,7 @@ describe('services/utils', () => {
             });
 
             test('returns empty array for empty receipts', () => {
-                const result = formatDataForCalculation([], 'PER ITEM', []);
+                const result = formatDataForCalculation([], 'PER_ITEM', []);
                 expect(result).toEqual([]);
             });
         });
@@ -378,19 +394,21 @@ describe('services/utils', () => {
 
             test('handles receipts with zero price in PER CATEGORY mode', () => {
                 const receipts = [
-                    { price: 0 },
-                    { price: 50.00 }
+                    { product: { name: 'Steak' }, price: 25.00 },
+                    { product: { name: 'Steak' }, price: 25.00 }
                 ];
                 const tiers = [
                     { minQuantity: 2, bonusPercentage: 0.10 }
                 ];
 
-                const result = formatDataForCalculation(receipts, 'PER CATEGORY', tiers);
+                const result = formatDataForCalculation(receipts, 'PER_CATEGORY', tiers);
 
                 expect(result).toEqual({
+                    productName: null,
                     quantity: 2,
                     revenue: 50.00,
-                    tier: { minQuantity: 2, bonusPercentage: 0.10 }
+                    tier: { minQuantity: 2, bonusPercentage: 0.10 },
+                    products: expect.any(Array)
                 });
             });
 
@@ -403,7 +421,7 @@ describe('services/utils', () => {
                     { minQuantity: 2, bonusPercentage: 0.10 }
                 ];
 
-                const result = formatDataForCalculation(receipts, 'PER ITEM', tiers);
+                const result = formatDataForCalculation(receipts, 'PER_ITEM', tiers);
 
                 expect(result).toHaveLength(1);
                 expect(result[0].revenue).toBeCloseTo(21.98, 2);
