@@ -1,117 +1,83 @@
 const BonusCalculator = require('../../../core/bonus/engine/bonusCalculator');
-const TierConfig = require('../../../core/bonus/engine/tierConfig');
 
-describe('BonusCalculator', ()=> {
 
-    test('should return 0 if no salesData is provided', ()=>{
-        const tierConfig = new TierConfig([
-        {minQuantity: 10, percentage: 0.05}, 
-        {minQuantity: 21, percentage: 0.1},
-        {minQuantity: 31, percentage: 0.15}
-       ]);
+describe('BonusCalculator', () => {
 
-       const calculator = new BonusCalculator({
-        category: 'steaks',
-        tierConfig,
-        mode: 'PER ITEM'
-       });
-
-       const salesData = {};
-
-       const bonus1 = calculator.calculateBonus(salesData);
-       const bonus2 = calculator.calculateBonus();
-
-       expect(bonus1).toBe(0);
-       expect(bonus2).toBe(0);
+    test('throws error if category is missing', () => {
+        expect(() => new BonusCalculator({})).toThrow('category is required');
 
 
     });
-    test('should throw if any argument is missing', () => {
-        expect(()=>{
-            new BonusCalculator({
-                category: 'steak',
-                tierConfig: {}
-            })
-        }).toThrow('mode is required');
-
-        expect(()=>{
-            new BonusCalculator({
-                testTierConfig: {},
-                mode: 'PER ITEM'
-            })
-        }).toThrow('category is required');
-        
-        expect(()=>{
-            new BonusCalculator({
-                category: 'steak',
-                mode: 'PER ITEM'
-            })
-        }).toThrow('tierConfig is required');
-    });
-
-
-    test("'PER ITEM' mode: items of the same category should be calculated differently ", ()=>{
-       const tierConfig = new TierConfig([
-        {minQuantity: 10, percentage: 0.05}, 
-        {minQuantity: 21, percentage: 0.1},
-        {minQuantity: 31, percentage: 0.15}
-       ]);
-
-       const calculator = new BonusCalculator({
-        category: 'steaks',
-        tierConfig,
-        mode: 'PER ITEM'
-       });
-
-       const salesData = {
-        ribeye: {quantity: 13, revenue: 1300},
-        wagyu: {quantity: 2, revenue: 1700}
-       };
-
-       const bonus = calculator.calculateBonus(salesData);
-
-       expect(bonus).toBe(65);
+    test('calculateBonus returns empty result for empty salesData', () => {
+        const calculator = new BonusCalculator({ category: 'steak' });
+        expect(calculator.calculateBonus([])).toEqual({ totalBonus: 0, items: [] });
+        expect(calculator.calculateBonus(null)).toEqual({ totalBonus: 0, items: [] });
 
     });
 
-    test("'PER CATEGORY' mode: items of the same category should be aggregated together", ()=>{
-       const tierConfig = new TierConfig([
-        {minQuantity: 20, percentage: 0.05},
-        {minQuantity: 25, percentage: 0.08},
-        {minQuantity: 30, percentage: 0.1}
-       ]);
 
-       const calculator = new BonusCalculator({
-        category: 'cocktails',
-        tierConfig,
-        mode: 'PER CATEGORY'
-       });
-
-       const salesData = {
-         negroni: {quantity: 12, revenue: 84},
-         martini: {quantity: 10, revenue: 60}
-       };
-
-       const bonus = calculator.calculateBonus(salesData);
-
-       expect(bonus).toBe(7.2);
-
+    test('calculateBonus returns 0 if tier is null', () => {
+        const calculator = new BonusCalculator({ category: 'cocktail' });
+        const salesData = [
+            { productName: 'Martini', quantity: 5, revenue: 500, tier: null },
+            { productName: 'Negroni', quantity: 3, revenue: 150, tier: null }
+        ];
+        const result = calculator.calculateBonus(salesData);
+        expect(result.totalBonus).toBe(0);
+        expect(result.items).toHaveLength(2);
+        expect(result.items[0].qualified).toBe(false);
     });
 
-    test('should throw if an unsupported calculation mode is given', ()=>{
-        const tierConfig = new TierConfig([
-        {minQuantity: 200, percentage: 0.05}
-       ]);
 
-       const calculator = new BonusCalculator({
-        category: 'cocktails',
-        tierConfig,
-        mode: 'PER STEAK'
-       });
-
-       expect(()=> {calculator.calculateBonus({})}).toThrow('Unsupported bonus calculation mode');
-
+    test('calculates bonus correctly for single sale', () => {
+        const calculator = new BonusCalculator({ category: 'steak' });
+        const salesData = [
+            { productName: 'Ribeye', quantity: 5, revenue: 500, tier: { minQuantity: 5, bonusPercentage: 10 } }
+        ];
+        const result = calculator.calculateBonus(salesData);
+        expect(result.totalBonus).toBe(50); // 500 * 10 / 100
+        expect(result.items).toHaveLength(1);
+        expect(result.items[0].productName).toBe('Ribeye');
+        expect(result.items[0].qualified).toBe(true);
+        expect(result.items[0].bonus).toBe(50);
     });
 
- 
+
+    test('calculates bonus correctly for multiple sales', () => {
+        const calculator = new BonusCalculator({ category: 'cocktail' });
+        const salesData = [
+            { productName: 'Martini', quantity: 10, revenue: 1000, tier: { minQuantity: 5, bonusPercentage: 15 } }, // 150
+            { productName: 'Negroni', quantity: 3, revenue: 300, tier: { minQuantity: 2, bonusPercentage: 5 } },   // 15
+            { productName: 'Old Fashioned', quantity: 1, revenue: 50, tier: null }                                       // 0
+        ];
+        const result = calculator.calculateBonus(salesData);
+        expect(result.totalBonus).toBe(165);
+        expect(result.items).toHaveLength(3);
+        expect(result.items[0].qualified).toBe(true);
+        expect(result.items[1].qualified).toBe(true);
+        expect(result.items[2].qualified).toBe(false);
+    });
+
+    test('ignores sales with invalid bonusPercentage', () => {
+        const calculator = new BonusCalculator({ category: 'dessert' });
+        const salesData = [
+            { productName: 'Tiramisu', quantity: 5, revenue: 200, tier: { minQuantity: 5 } }, // no bonusPercentage
+            { productName: 'Cheesecake', quantity: 3, revenue: 150, tier: { minQuantity: 2, bonusPercentage: 10 } }
+        ];
+        const result = calculator.calculateBonus(salesData);
+        expect(result.totalBonus).toBe(15); // only second one counts
+        expect(result.items[0].qualified).toBe(false);
+        expect(result.items[1].qualified).toBe(true);
+    });
+
+    test('calculates correctly with bonusPercentage 0', () => {
+        const calculator = new BonusCalculator({ category: 'dessert' });
+        const salesData = [
+            { productName: 'Sorbet', quantity: 5, revenue: 200, tier: { minQuantity: 5, bonusPercentage: 0 } }
+        ];
+        const result = calculator.calculateBonus(salesData);
+        expect(result.totalBonus).toBe(0);
+        expect(result.items[0].qualified).toBe(false);
+    });
+
 });

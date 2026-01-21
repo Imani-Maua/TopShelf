@@ -1,136 +1,117 @@
-# 🏨  TopShelf
+# TopShelf: Upsell Bonus Calculation System
 
-TopShelf automates the calculation of upsell bonuses for restaurant staff. It replaces the
-existing Excel and Macros system with a **JavaScript end-to-end solution**
-TopShelf is designed to be **extensible, maintainable, and modular**, allowing you to easily add new categories or rules in the future.
+TopShelf is a high-performance, modular REST API built to manage and calculate upsell bonuses for restaurant and retail environments. It handles everything from participant management to complex tiered bonus calculations with full audit transparency.
 
-> ⚠️ This repository is dedicated to **backend** implementation.
+## 🚀 Features
 
-## 📑 Table of Contents
+- **Custom Bonus Engine**: 
+  - Dynamic tiered bonus structures.
+  - Supports `PER_ITEM` (bonus per product sold) and `PER_CATEGORY` (bonus based on total category volume) modes.
+  - **Audit Log Transparency**: Provides detailed breakdowns, including explanations for participants who didn't meet thresholds.
+- **Strict Data Validation**:
+  - **Monotonic Progression**: Tier rules automatically enforced to ensure higher quantities always yield higher bonus percentages.
+  - **Category Integration**: Business rules prevent deletion of categories with active products and enforce minimum tier rules.
+- **Robust API Coverage**: Full CRUD for Participants, Categories, Products, Tier Rules, and Forecasts.
+- **Read-Only Receipt Tracking**: Historical sales data integrity is maintained with read-only receipt endpoints.
+- **Comprehensive Testing**: 180+ automated tests covering every endpoint and business logic edge case.
 
-- [🏨 TopShelf](#-topshelf)
-  - [📑 Table of Contents](#-table-of-contents)
-  - [Overview](#overview)
-  - [💻 Tech Stack](#-tech-stack)
-  - [🚀 Getting Started](#-getting-started)
-  - [🏃‍♂️ Usage](#-usage)
-  - [🧪 Testing](#-testing)
-  - [📂 Project Structure](#-project-structure)
-  - [⚙️ Configuration](#-configuration)
-  - [⚙️ How It Works](#️-how-it-works)
-    - [📊 Forecast Check](#-forecast-check)
-    - [🎯 Bonus Rules](#-bonus-rules)
-  - [License](#license)
+## 🛠 Tech Stack
 
----
+- **Runtime**: [Node.js](https://nodejs.org/) (v18+)
+- **Framework**: [Express.js](https://expressjs.com/)
+- **ORM**: [Prisma](https://www.prisma.io/)
+- **Database**: [MongoDB](https://www.mongodb.com/)
+- **Testing**: [Jest](https://jestjs.io/) & [Supertest](https://github.com/ladjs/supertest)
+- **CI/CD**: GitHub Actions
 
-## Overview
+## 📁 Project Structure
 
-The hotel sets a **monthly forecast** - a revenue goal. Staff bonuses are only applicable if **90% of the forecast** (or configurable threshold) is reached. Once this condition is met, individual staff members are eligible for bonuses based on their sales in different categories.
-TopShelf calculates bonuses **per person**, using tiered rules for each category of the item sold.
+```text
+├── core/                   # Modularized business logic (one folder per resource)
+│   ├── bonus/              # Bonus calculation engine and services
+│   ├── participants/       # Participant management logic
+│   ├── categories/         # Category definitions and bonus modes
+│   ├── products/           # Product catalog logic
+│   ├── tier-rules/         # Tiered bonus logic
+│   ├── forecasts/          # Target and threshold settings
+│   └── receipts/           # Read-only history logic
+├── prisma/                 # Prisma schema, seeds, and migrations
+├── src/                    # Application entry points (app.js, server.js)
+└── tests/                  # Automated test suites (mirrors core structure)
+    ├── bonus/
+    ├── categories/
+    ├── forecasts/
+    ├── participants/
+    ├── products/
+    ├── receipts/
+    └── tier-rules/
+```
 
----
-## 💻 Tech Stack
-
-This project is a **Node.js backend**  application using:
-
-- **Node.js** - JavaScript runtime for the backend
-- **Express** - Web framework for building REST APIs
-- **ES6+ JavaScript** - Modern syntax for classes, modules, and async code
-- **MongoDB** - Database for storing records
-  
----
-
-## 🚀 Getting Started
+## 🛠 Getting Started
 
 ### Prerequisites
-- Node.js (v14 or higher recommended)
-- npm
+
+- Node.js installed
+- MongoDB instance (local or Atlas)
+- `.env` file with `DATABASE_URL`
+
+### 🔑 Environment Variables
+
+To run this project, you will need to add the following environment variables to your `.env` file:
+
+`DATABASE_URL` - Your MongoDB connection string (e.g., `mongodb+srv://...`)
+
+`PORT` - (Optional) Port to run the server on (Default: `3000`)
+
+`NODE_ENV` - Set to `development` or `production`
 
 ### Installation
 
-1. Clone the repository:
+1. **Clone the repository**:
    ```bash
    git clone <repository-url>
-   cd topshelf
+   cd TopShelf
    ```
 
-2. Install dependencies:
+2. **Install dependencies**:
    ```bash
    npm install
    ```
 
----
+3. **Setup Database**:
+   ```bash
+   npx prisma generate
+   npx prisma db push
+   npm run prisma:seed # Optional: Populate with sample data
+   ```
 
-## 🏃‍♂️ Usage
-
-To start the server locally:
-
-```bash
-npm start
-```
-
-The server will start on `http://localhost:3000`.
-
----
+4. **Start the server**:
+   ```bash
+   npm start
+   ```
+   The API will be available at `http://localhost:3000`.
 
 ## 🧪 Testing
 
-TopShelf includes a comprehensive test suite using Jest.
+The project maintains high stability via a suite of 185 tests.
 
-Run unit tests:
-```bash
-npm test
-```
+- **Run all tests**: `npm test`
+- **View coverage**: `npm test -- --coverage`
 
-Run tests with coverage:
-```bash
-npm test -- --coverage
-```
+### Key Endpoints
 
----
+| Resource | Methods | Description |
+| :--- | :--- | :--- |
+| `/api/participants` | GET, POST, PUT, DELETE | Manage sellers/staff |
+| `/api/categories` | GET, POST, PUT, DELETE | Product groups & bonus modes |
+| `/api/products` | GET, POST, PUT, DELETE | Individual item management |
+| `/api/bonus/calculate` | POST | Trigger bonus math for a period |
+| `/api/receipts` | GET | View historical sales (Read-Only) |
 
-## 📂 Project Structure
+## 🛡 CI/CD
 
-```
-.
-├── core/         # Business logic (Bonus rules, Participants)
-├── src/          # API & Server configuration (Express app)
-├── tests/        # Unit tests
-├── prisma/       # Database schema
-└── utils/        # Utility helpers
-```
+Automated testing is integrated via **GitHub Actions**. Every Push and Pull Request triggers the full test suite across multiple Node.js versions to ensure zero regressions.
 
 ---
 
-## ⚙️ Configuration
-
-- **Forecast Threshold**: Currently configured in constants (default 90%).
-- **Database**: Configure your MongoDB connection string in the `.env` file (see `.env.example`).
-
----
-
-## ⚙️ How It Works
-
-### 📊 Forecast Check
-
-Before calculating any bonuses, TopShelf checks if the hotel has met the revenue forecast.
-
-- **Threshold:** 90% of the monthly forecast (configurable)
-- **Outcome:**
-  - If met → bonuses are calculated
-  - If not → no bonuses are applied
-
-Implemented in `ForecastChecker`:
-
----
-
-### 🎯 Bonus Rules
-
-TopShelf uses an abstract `BonusRule` class to define the tiered rules. Each category of item extends this base class to implement its own calculation logic. This keeps the code DRY and extensible.
-
----
-
-## License
-
-This project is licensed under MIT License.
+**Developed by Maua Imani**
