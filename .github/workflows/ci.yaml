@@ -31,7 +31,9 @@ jobs:
       - name: Sync Database Schema
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
-        run: npx prisma db push --skip-generate
+        run: |
+          npx prisma db push --skip-generate
+          npx prisma db seed
 
       - name: Run tests
         env:
