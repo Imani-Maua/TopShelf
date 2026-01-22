@@ -8,6 +8,27 @@ const bonusService = new BonusService();
 const parsingService = new ParsingService();
 
 /**
+ * GET /api/bonuses
+ * Get all bonus payouts
+ */
+bonus.get('/', async (req, res) => {
+    try {
+        const payouts = await bonusService.getAllPayouts();
+        res.status(200).json({
+            success: true,
+            data: payouts,
+            count: payouts.length
+        });
+    } catch (error) {
+        console.error('Error fetching payouts:', error);
+        res.status(500).json({
+            error: 'Failed to fetch payouts',
+            message: error.message
+        });
+    }
+});
+
+/**
  * POST /api/bonuses/calculate
  * Calculate bonuses for a specific month/year
  * 
@@ -42,11 +63,30 @@ bonus.post('/calculate', validateBonusCalculation, async (req, res) => {
 });
 
 /**
+ * GET /api/bonuses/participants/:id
+ * Get payout history for a specific participant
+ */
+bonus.get('/participants/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const payouts = await bonusService.getParticipantPayouts(id);
+        res.status(200).json({
+            success: true,
+            data: payouts,
+            count: payouts.length
+        });
+    } catch (error) {
+        console.error('Error fetching participant payouts:', error);
+        res.status(500).json({
+            error: 'Failed to fetch participant payouts',
+            message: error.message
+        });
+    }
+});
+
+/**
  * POST /api/bonuses/upload-receipts
  * Upload CSV file with receipts
- * 
- * Note: This will require multer middleware for file upload
- * For now, expects filePath in body
  */
 bonus.post('/upload-receipts', async (req, res) => {
     try {

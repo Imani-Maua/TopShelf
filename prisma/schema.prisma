@@ -15,6 +15,8 @@ model Participant {
   id           String        @id @default(auto()) @map("_id") @db.ObjectId
   firstname    String
   lastname     String
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
   receipts     Receipt[]
   bonusPayouts BonusPayout[]
 }
@@ -24,6 +26,8 @@ model Category {
   name      String
   // Mode can be 'PER_ITEM' or 'PER_CATEGORY'
   mode      String
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
   products  Product[]
   tierRules TierRule[]
 }
@@ -34,6 +38,8 @@ model Product {
   price      Float
   category   Category  @relation(fields: [categoryId], references: [id])
   categoryId String    @db.ObjectId
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
   receipts   Receipt[]
 }
 
@@ -53,6 +59,8 @@ model Receipt {
   productId     String      @db.ObjectId
   date          DateTime    @default(now())
   price         Float
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
 }
 
 model BonusPayout {
@@ -62,6 +70,9 @@ model BonusPayout {
   amount        Float
   // Period could be a string like "2024-01"
   period        String
+  breakdown     Json?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
 }
 
 model Forecast {
@@ -71,4 +82,6 @@ model Forecast {
   targetAmount Float
   // Threshold as a decimal percentage, e.g. 0.9 for 90%
   threshold    Float
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 }

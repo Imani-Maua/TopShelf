@@ -105,6 +105,26 @@ class BonusService {
             breakdown: payout.breakdown
         }));
 
+        // Persist payouts to database
+        const period = `${year}-${month.toString().padStart(2, '0')}`;
+
+        // Clear existing payouts for this period to avoid duplicates
+        await prisma.bonusPayout.deleteMany({
+            where: { period }
+        });
+
+        // Save new payouts
+        if (payouts.length > 0) {
+            await prisma.bonusPayout.createMany({
+                data: payouts.map(p => ({
+                    participantId: p.participant.id,
+                    amount: p.amount,
+                    period: period,
+                    breakdown: p.breakdown
+                }))
+            });
+        }
+
         return {
             forecastMet: true,
             revenues: { total: totalRevenue, target: forecast.targetAmount },
@@ -112,8 +132,30 @@ class BonusService {
         };
     }
 
+    /**
+     * Get all bonus payouts for dashboard display
+     */
+    async getAllPayouts() {
+        return await prisma.bonusPayout.findMany({
+            include: {
+                participant: true
+            },
+            orderBy: {
+                createdAt: 'desc'
+            },
+            take: 50 // Increased limit for detailed views
+        });
+    }
 
-
+    /**
+     * Get payout history for a specific participant
+     */
+    async getParticipantPayouts(participantId) {
+        return await prisma.bonusPayout.findMany({
+            where: { participantId },
+            orderBy: { createdAt: 'desc' }
+        });
+    }
 
 }
 
