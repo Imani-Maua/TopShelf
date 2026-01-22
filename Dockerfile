@@ -10,8 +10,6 @@ FROM base AS test
 COPY prisma ./prisma/
 RUN npm ci 
 COPY . .
-#RUN npm test 
-#Run tests during build. Fail early so that bad code never makes it to prod
 EXPOSE 3000
 CMD ["npm", "start"]
 
