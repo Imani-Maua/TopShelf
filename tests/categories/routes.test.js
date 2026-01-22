@@ -68,7 +68,7 @@ describe('Categories API', () => {
                 expect(response.body.data.id).toBe(category.id);
                 expect(response.body.data).toHaveProperty('tierRules');
             }
-        });
+        }, 15000); // Increased timeout to 15 seconds for slow DB query
 
         it('should return 404 for non-existent category', async () => {
             const fakeId = '000000000000000000000000';

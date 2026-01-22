@@ -2,7 +2,11 @@ jest.mock('@prisma/client', () => {
     const mPrisma = {
         forecast: { findFirst: jest.fn() },
         receipt: { findMany: jest.fn() },
-        category: { findMany: jest.fn() }
+        category: { findMany: jest.fn() },
+        bonusPayout: {
+            deleteMany: jest.fn().mockResolvedValue({ count: 0 }),
+            createMany: jest.fn().mockResolvedValue({ count: 0 })
+        }
     };
     return {
         PrismaClient: jest.fn(() => mPrisma)
