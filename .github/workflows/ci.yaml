@@ -1,4 +1,4 @@
-name: Upsell Program CI Tests
+name: CI
 
 on:
   push:
@@ -10,55 +10,24 @@ jobs:
   test:
     runs-on: ubuntu-latest
 
-    services:
-      mongodb:
-        image: mongo:7.0
-        ports:
-          - 27017:27017
-
-    # Run tests on multiple Node.js versions
-    strategy:
-      matrix:
-        node-version: [18.x, 20.x, 22.x]
-
     steps:
       # 1️⃣ Checkout the repository
       - name: Checkout repository
-        uses: actions/checkout@v4
-
-      # 2️⃣ Setup Node.js
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ matrix.node-version }}
-          cache: 'npm'
-
-      # 3️⃣ Install dependencies
-      - name: Install dependencies
-        run: npm ci
-
-      # 4️⃣ Generate Prisma Client & Setup Local Database
-      - name: Setup Database
-        env:
-          DATABASE_URL: mongodb://localhost:27017/topshelf-ci
+        uses: actions/checkout@v3
+      
+      - name: Build Docker test image
         run: |
-          npx prisma generate
-          npx prisma db push --skip-generate
-          npx prisma db seed
-
-      # 5️⃣ Run tests
-      - name: Run tests
-        env:
-          DATABASE_URL: mongodb://localhost:27017/topshelf-ci
+          docker build --target test -t topshelf-backend:test .
+      
+      - name: Run tests in Docker
+        env: 
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          PORT: 3000
           NODE_ENV: test
-        run: npm test
-
-      # 6️⃣ Upload coverage reports
-      - name: Upload coverage reports
-        uses: codecov/codecov-action@v3
-        if: matrix.node-version == '20.x'  # optional, only one runner
-        with:
-          files: ./coverage/lcov.info
-          flags: unittests
-          name: codecov-umbrella
-          fail_ci_if_error: false
+        run: |
+          docker run \
+            -e DATABASE_URL \
+            -e PORT \
+            -e NODE_ENV \
+            topshelf-backend:test \
+            npm test
