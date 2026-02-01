@@ -98,9 +98,14 @@ router.post('/', validateProduct, async (req, res) => {
             });
         }
 
-        // Check for duplicate name
+        // Check for duplicate name (case-insensitive)
         const existing = await prisma.product.findFirst({
-            where: { name }
+            where: {
+                name: {
+                    equals: name,
+                    mode: 'insensitive'
+                }
+            }
         });
 
         if (existing) {

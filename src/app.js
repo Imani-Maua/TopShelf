@@ -1,8 +1,12 @@
 const express = require('express');
 
 const app = express();
+const cors = require('cors');
 
-// Middleware
+// 1. TEMPORARY: Allow all origins to isolate if this is a CORS issue
+app.use(cors());
+
+// 2. Body parsing middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -24,8 +28,6 @@ app.get('/api/health', (req, res) => {
         uptime: process.uptime()
     });
 });
-
-// Register routes
 app.use('/api/bonuses', bonusRoutes);
 app.use('/api/participants', participantRoutes);
 app.use('/api/categories', categoryRoutes);

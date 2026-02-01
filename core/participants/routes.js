@@ -81,11 +81,13 @@ router.post('/', validateParticipant, async (req, res) => {
     try {
         const { firstname, lastname } = req.body;
 
-        // Check for duplicate
+        // Check for duplicate (case-insensitive)
         const existing = await prisma.participant.findFirst({
             where: {
-                firstname,
-                lastname
+                AND: [
+                    { firstname: { equals: firstname, mode: 'insensitive' } },
+                    { lastname: { equals: lastname, mode: 'insensitive' } }
+                ]
             }
         });
 

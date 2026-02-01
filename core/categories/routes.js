@@ -82,9 +82,14 @@ router.post('/', validateCategory, async (req, res) => {
     try {
         const { name, mode, tierRules } = req.body;
 
-        // Check for duplicate name
+        // Check for duplicate name (case-insensitive)
         const existing = await prisma.category.findFirst({
-            where: { name }
+            where: {
+                name: {
+                    equals: name,
+                    mode: 'insensitive'
+                }
+            }
         });
 
         if (existing) {

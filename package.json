@@ -21,8 +21,10 @@
   },
   "dependencies": {
     "@prisma/client": "^5.22.0",
+    "cors": "^2.8.6",
     "csv-parser": "^3.2.0",
     "express": "^5.2.1",
-    "mongodb": "^7.0.0"
+    "mongodb": "^7.0.0",
+    "multer": "^2.0.2"
   }
 }
