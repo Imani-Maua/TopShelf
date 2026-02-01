@@ -49,6 +49,32 @@ class BonusService {
         if (receipts.length === 0)
             return { message: "No sales found for this period.", payouts: [] };
 
+        // Calculate bonus-eligible revenue from receipts
+        const bonusEligibleRevenue = receipts.reduce((sum, r) => sum + r.price, 0);
+
+        // Track data completeness
+        const uniqueDates = [...new Set(receipts.map(r =>
+            r.date.toISOString().split('T')[0]
+        ))].sort();
+
+        const daysInMonth = new Date(year, month, 0).getDate();
+        const missingDays = [];
+        for (let day = 1; day <= daysInMonth; day++) {
+            const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+            if (!uniqueDates.includes(dateStr)) {
+                missingDays.push(dateStr);
+            }
+        }
+
+        const dataCompleteness = {
+            startDate: uniqueDates[0] || null,
+            endDate: uniqueDates[uniqueDates.length - 1] || null,
+            daysWithData: uniqueDates.length,
+            totalDays: daysInMonth,
+            missingDays: missingDays,
+            completenessPercentage: Math.round((uniqueDates.length / daysInMonth) * 100)
+        };
+
         const categories = await prisma.category.findMany({ include: { tierRules: true } });
 
         // Prepare calculators per category
@@ -107,7 +133,12 @@ class BonusService {
 
         return {
             forecastMet: true,
-            revenues: { total: totalRevenue, target: forecast.targetAmount },
+            revenues: {
+                total: totalRevenue,
+                bonusEligible: bonusEligibleRevenue,
+                target: forecast.targetAmount
+            },
+            dataCompleteness: dataCompleteness,
             payouts: payouts.sort((a, b) => b.amount - a.amount)
         };
     }
