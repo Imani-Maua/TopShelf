@@ -2,8 +2,12 @@ const express = require('express');
 const router = express.Router();
 const { PrismaClient } = require('@prisma/client');
 const { validateParticipant, validateObjectId } = require('./validators');
+const multer = require('multer');
+const csv = require('csv-parser');
+const { Readable } = require('stream');
 
 const prisma = new PrismaClient();
+const upload = multer({ storage: multer.memoryStorage() });
 
 /**
  * GET /api/participants
@@ -199,6 +203,107 @@ router.delete('/:id', validateObjectId, async (req, res) => {
         console.error('Error deleting participant:', error);
         res.status(500).json({
             error: 'Failed to delete participant',
+            message: error.message
+        });
+    }
+});
+
+/**
+ * POST /api/participants/upload-csv
+ * Bulk import participants from CSV
+ */
+router.post('/upload-csv', upload.single('file'), async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({
+                error: 'No file uploaded',
+                details: ['Please upload a CSV file']
+            });
+        }
+
+        const results = [];
+        const errors = [];
+        const duplicates = [];
+
+        // Parse CSV
+        const stream = Readable.from(req.file.buffer.toString());
+
+        await new Promise((resolve, reject) => {
+            stream
+                .pipe(csv())
+                .on('data', (row) => {
+                    results.push(row);
+                })
+                .on('end', resolve)
+                .on('error', reject);
+        });
+
+        // Process each row
+        for (let i = 0; i < results.length; i++) {
+            const row = results[i];
+            const rowNum = i + 2; // +2 because CSV is 1-indexed and has header
+
+            // Validate required fields
+            if (!row.firstname || !row.lastname) {
+                errors.push({
+                    row: rowNum,
+                    message: 'Missing required fields (firstname, lastname)'
+                });
+                continue;
+            }
+
+            // Check for duplicate in database
+            const existing = await prisma.participant.findFirst({
+                where: {
+                    AND: [
+                        { firstname: { equals: row.firstname.trim(), mode: 'insensitive' } },
+                        { lastname: { equals: row.lastname.trim(), mode: 'insensitive' } }
+                    ]
+                }
+            });
+
+            if (existing) {
+                duplicates.push({
+                    row: rowNum,
+                    name: `${row.firstname} ${row.lastname}`
+                });
+                continue;
+            }
+
+            // Create participant
+            try {
+                await prisma.participant.create({
+                    data: {
+                        firstname: row.firstname.trim(),
+                        lastname: row.lastname.trim()
+                    }
+                });
+            } catch (err) {
+                errors.push({
+                    row: rowNum,
+                    message: err.message
+                });
+            }
+        }
+
+        const processed = results.length - errors.length - duplicates.length;
+
+        res.status(200).json({
+            success: true,
+            data: {
+                processed,
+                total: results.length,
+                duplicates: duplicates.length,
+                errors: errors.length,
+                duplicateDetails: duplicates,
+                errorDetails: errors
+            }
+        });
+
+    } catch (error) {
+        console.error('Error uploading CSV:', error);
+        res.status(500).json({
+            error: 'Failed to process CSV',
             message: error.message
         });
     }

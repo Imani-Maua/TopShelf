@@ -2,8 +2,12 @@ const express = require('express');
 const router = express.Router();
 const { PrismaClient } = require('@prisma/client');
 const { validateProduct, validateObjectId } = require('./validators');
+const multer = require('multer');
+const csv = require('csv-parser');
+const { Readable } = require('stream');
 
 const prisma = new PrismaClient();
+const upload = multer({ storage: multer.memoryStorage() });
 
 /**
  * GET /api/products
@@ -241,6 +245,131 @@ router.delete('/:id', validateObjectId, async (req, res) => {
         console.error('Error deleting product:', error);
         res.status(500).json({
             error: 'Failed to delete product',
+            message: error.message
+        });
+    }
+});
+
+/**
+ * POST /api/products/upload-csv
+ * Bulk import products from CSV
+ * CSV format: name,category
+ * Auto-creates categories if they don't exist (with default PER_ITEM mode)
+ */
+router.post('/upload-csv', upload.single('file'), async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({
+                error: 'No file uploaded',
+                details: ['Please upload a CSV file']
+            });
+        }
+
+        const results = [];
+        const errors = [];
+        const duplicates = [];
+        const newCategories = [];
+
+        // Parse CSV
+        const stream = Readable.from(req.file.buffer.toString());
+
+        await new Promise((resolve, reject) => {
+            stream
+                .pipe(csv())
+                .on('data', (row) => {
+                    results.push(row);
+                })
+                .on('end', resolve)
+                .on('error', reject);
+        });
+
+        // Process each row
+        for (let i = 0; i < results.length; i++) {
+            const row = results[i];
+            const rowNum = i + 2; // +2 because CSV is 1-indexed and has header
+
+            // Validate required fields
+            if (!row.name || !row.category) {
+                errors.push({
+                    row: rowNum,
+                    message: 'Missing required fields (name, category)'
+                });
+                continue;
+            }
+
+            // Check for duplicate product name
+            const existingProduct = await prisma.product.findFirst({
+                where: {
+                    name: { equals: row.name.trim(), mode: 'insensitive' }
+                }
+            });
+
+            if (existingProduct) {
+                duplicates.push({
+                    row: rowNum,
+                    name: row.name
+                });
+                continue;
+            }
+
+            // Find or create category
+            let category = await prisma.category.findFirst({
+                where: {
+                    name: { equals: row.category.trim(), mode: 'insensitive' }
+                }
+            });
+
+            if (!category) {
+                // Auto-create category with default PER_ITEM mode
+                category = await prisma.category.create({
+                    data: {
+                        name: row.category.trim(),
+                        mode: 'PER_ITEM' // Default mode
+                    }
+                });
+                newCategories.push(category.name);
+            }
+
+            // Create product (price will be 0 by default, needs to be updated later)
+            try {
+                await prisma.product.create({
+                    data: {
+                        name: row.name.trim(),
+                        price: 0, // Default price, should be updated
+                        categoryId: category.id
+                    }
+                });
+            } catch (err) {
+                errors.push({
+                    row: rowNum,
+                    message: err.message
+                });
+            }
+        }
+
+        const processed = results.length - errors.length - duplicates.length;
+
+        res.status(200).json({
+            success: true,
+            data: {
+                processed,
+                total: results.length,
+                duplicates: duplicates.length,
+                errors: errors.length,
+                newCategories: newCategories.length,
+                duplicateDetails: duplicates,
+                errorDetails: errors,
+                newCategoryList: newCategories
+            },
+            message: newCategories.length > 0
+                ? `Created ${newCategories.length} new categories. Remember to set tier rules for bonus calculations!`
+                : null
+        });
+
+    } catch (error) {
+        console.error('Error uploading CSV:', error);
+        res.status(500).json({
+            error: 'Failed to process CSV',
             message: error.message
         });
     }

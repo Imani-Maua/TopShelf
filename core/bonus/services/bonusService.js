@@ -77,6 +77,16 @@ class BonusService {
 
         const categories = await prisma.category.findMany({ include: { tierRules: true } });
 
+        // CRITICAL VALIDATION: Ensure all categories have at least one tier rule
+        const categoriesWithoutRules = categories.filter(cat => cat.tierRules.length === 0);
+        if (categoriesWithoutRules.length > 0) {
+            const categoryNames = categoriesWithoutRules.map(category => category.name).join(', ');
+            throw new Error(
+                `Cannot calculate bonuses: The following categories have no tier rules configured: ${categoryNames}. ` +
+                `Please add tier rules for all categories before calculating bonuses.`
+            );
+        }
+
         // Prepare calculators per category
         const calculators = {};
         categories.forEach(category => {
