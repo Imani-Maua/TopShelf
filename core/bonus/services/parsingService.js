@@ -50,7 +50,6 @@ class ParsingService {
             }
 
             if (!productId) {
-                errors.push({ row: records.row, message: `Unknown Product: "${records.itemName}". Ensure component exists in catalog.` });
                 continue;
             }
 
@@ -82,7 +81,7 @@ class ParsingService {
                 participantId: participantId,
                 productId: productId,
                 date: records.saleDate,
-                price: records.price
+                price: records.quantity * records.price // Total price = quantity × unit price
             });
 
         }
