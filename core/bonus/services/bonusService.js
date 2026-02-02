@@ -26,17 +26,10 @@ class BonusService {
             throw new Error(`Forecast not found for ${month}/${year}`);
 
         const checker = new ForecastChecker(forecast.threshold, forecast.targetAmount);
+        const forecastMet = checker.isForecastMet(totalRevenue);
 
-        if (!checker.isForecastMet(totalRevenue)) {
-            return {
-                forecastMet: false,
-                revenues: { total: totalRevenue, target: forecast.targetAmount },
-                payouts: []
-            };
-        }
-
-        const monthStart = new Date(year, month - 1, 1);
-        const monthEnd = new Date(year, month, 0, 23, 59, 59);
+        const monthStart = new Date(Date.UTC(year, month - 1, 1));
+        const monthEnd = new Date(Date.UTC(year, month, 0, 23, 59, 59));
 
         const receipts = await prisma.receipt.findMany({
             where: { date: { gte: monthStart, lte: monthEnd } },
@@ -50,11 +43,11 @@ class BonusService {
             return { message: "No sales found for this period.", payouts: [] };
 
         // Calculate bonus-eligible revenue from receipts
-        const bonusEligibleRevenue = receipts.reduce((sum, r) => sum + r.price, 0);
+        const bonusEligibleRevenue = receipts.reduce((sum, receipt) => sum + receipt.price, 0);
 
         // Track data completeness
-        const uniqueDates = [...new Set(receipts.map(r =>
-            r.date.toISOString().split('T')[0]
+        const uniqueDates = [...new Set(receipts.map(receipt =>
+            receipt.date.toISOString().split('T')[0]
         ))].sort();
 
         const daysInMonth = new Date(year, month, 0).getDate();
@@ -78,7 +71,7 @@ class BonusService {
         const categories = await prisma.category.findMany({ include: { tierRules: true } });
 
         // CRITICAL VALIDATION: Ensure all categories have at least one tier rule
-        const categoriesWithoutRules = categories.filter(cat => cat.tierRules.length === 0);
+        const categoriesWithoutRules = categories.filter(category => category.tierRules.length === 0);
         if (categoriesWithoutRules.length > 0) {
             const categoryNames = categoriesWithoutRules.map(category => category.name).join(', ');
             throw new Error(
@@ -137,25 +130,101 @@ class BonusService {
                 id: payout.seller,
                 name: participantsMap[payout.seller]
             },
-            amount: payout.totalBonus,
-            breakdown: payout.breakdown
+            amount: forecastMet ? payout.totalBonus : 0, // Force 0 if target not met
+            breakdown: payout.breakdown,
+            potentialBonus: payout.totalBonus // Useful for "what-if" display
         }));
 
         return {
-            forecastMet: true,
+            forecastMet,
             revenues: {
                 total: totalRevenue,
                 bonusEligible: bonusEligibleRevenue,
                 target: forecast.targetAmount
             },
             dataCompleteness: dataCompleteness,
-            payouts: payouts.sort((a, b) => b.amount - a.amount)
+            payouts: payouts.sort((a, b) => b.potentialBonus - a.potentialBonus)
         };
     }
 
+    /**
+     * Save calculated bonuses to database
+     * @param {Number} month 
+     * @param {Number} year 
+     * @param {Object} calculationResult - Output from calculateAllBonuses
+     */
+    async saveBonuses(month, year, calculationResult) {
+        const { forecastMet, revenues, payouts } = calculationResult;
+
+        if (!payouts || payouts.length === 0) {
+            throw new Error('No payouts to save');
+        }
+
+        const period = `${year}-${String(month).padStart(2, '0')}`;
+
+        // Delete existing bonuses for this period
+        await prisma.bonusPayout.deleteMany({
+            where: { month, year }
+        });
+
+        // Prepare bonus records
+        const bonusRecords = payouts.map(payout => ({
+            participantId: payout.participant.id,
+            amount: payout.amount,
+            potentialBonus: payout.potentialBonus,
+            breakdown: payout.breakdown, // Store as JSON
+            period,
+            month,
+            year,
+            forecastMet,
+            totalRevenue: revenues.total,
+            targetRevenue: revenues.target
+        }));
+
+        // Bulk insert
+        const result = await prisma.bonusPayout.createMany({
+            data: bonusRecords
+        });
+
+        return {
+            saved: result.count,
+            period,
+            forecastMet
+        };
+    }
+
+    /**
+     * Get bonuses for a specific participant
+     * @param {String} participantId 
+     */
+    async getParticipantBonuses(participantId) {
+        const bonuses = await prisma.bonusPayout.findMany({
+            where: { participantId },
+            include: { participant: true },
+            orderBy: { createdAt: 'desc' }
+        });
+
+        return bonuses;
+    }
+
+    /**
+     * Get all bonuses for a specific period
+     * @param {Number} month 
+     * @param {Number} year 
+     */
+    async getBonusesByPeriod(month, year) {
+        const bonuses = await prisma.bonusPayout.findMany({
+            where: { month, year },
+            include: { participant: true },
+            orderBy: { amount: 'desc' }
+        });
+
+        return bonuses;
+    }
 
 
 
 }
 
 module.exports = BonusService;
+
