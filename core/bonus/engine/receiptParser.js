@@ -1,6 +1,6 @@
 const fs = require('fs');
 const csv = require('csv-parser');
-const validateTransformInput = require('./utils');
+const { validateTransformInput } = require('./utils');
 
 /**
  * ReceiptParser - The Gateway for file uploads.
@@ -25,7 +25,7 @@ class ReceiptParser {
 
         // Future extension points:
         // if (fileType === 'excel') return this.#parseExcel(filePath);
-        
+
         throw new Error(`Unsupported file type: ${fileType}`);
     }
 
@@ -73,7 +73,7 @@ class ReceiptParser {
      * @param {number} index - Line number for error reporting
      */
     #validateAndTransform(rawData, index) {
-       
+
     }
 }
 
