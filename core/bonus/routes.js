@@ -130,4 +130,96 @@ bonus.post('/upload-receipts', upload.single('file'), async (req, res) => {
     }
 });
 
+/**
+ * POST /api/bonuses/save
+ * Save calculated bonuses to database
+ * 
+ * Body: { month: number, year: number, calculationResult: object }
+ */
+bonus.post('/save', async (req, res) => {
+    try {
+        const { month, year, calculationResult } = req.body;
+
+        if (!month || !year || !calculationResult) {
+            return res.status(400).json({
+                error: 'Validation failed',
+                details: ['month, year, and calculationResult are required']
+            });
+        }
+
+        const result = await bonusService.saveBonuses(month, year, calculationResult);
+
+        res.status(200).json({
+            success: true,
+            message: `Saved ${result.saved} bonus records for ${result.period}`,
+            data: result
+        });
+
+    } catch (error) {
+        console.error('Error saving bonuses:', error);
+        res.status(500).json({
+            error: 'Failed to save bonuses',
+            message: error.message
+        });
+    }
+});
+
+/**
+ * GET /api/bonuses/participant/:participantId
+ * Get all bonuses for a specific participant
+ */
+bonus.get('/participant/:participantId', async (req, res) => {
+    try {
+        const { participantId } = req.params;
+
+        const bonuses = await bonusService.getParticipantBonuses(participantId);
+
+        res.status(200).json({
+            success: true,
+            count: bonuses.length,
+            data: bonuses
+        });
+
+    } catch (error) {
+        console.error('Error fetching participant bonuses:', error);
+        res.status(500).json({
+            error: 'Failed to fetch bonuses',
+            message: error.message
+        });
+    }
+});
+
+/**
+ * GET /api/bonuses/period/:month/:year
+ * Get all bonuses for a specific period
+ */
+bonus.get('/period/:month/:year', async (req, res) => {
+    try {
+        const month = parseInt(req.params.month);
+        const year = parseInt(req.params.year);
+
+        if (!month || month < 1 || month > 12 || !year) {
+            return res.status(400).json({
+                error: 'Validation failed',
+                details: ['Valid month (1-12) and year are required']
+            });
+        }
+
+        const bonuses = await bonusService.getBonusesByPeriod(month, year);
+
+        res.status(200).json({
+            success: true,
+            count: bonuses.length,
+            data: bonuses
+        });
+
+    } catch (error) {
+        console.error('Error fetching period bonuses:', error);
+        res.status(500).json({
+            error: 'Failed to fetch bonuses',
+            message: error.message
+        });
+    }
+});
+
 module.exports = bonus;
