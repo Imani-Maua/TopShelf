@@ -18,6 +18,7 @@ const productRoutes = require('../core/products/routes');
 const forecastRoutes = require('../core/forecasts/routes');
 const tierRuleRoutes = require('../core/tier-rules/routes');
 const receiptRoutes = require('../core/receipts/routes');
+const authRoutes = require('../core/auth/routes');
 
 // Health check
 app.get('/api/health', (req, res) => {
@@ -35,6 +36,7 @@ app.use('/api/products', productRoutes);
 app.use('/api/forecasts', forecastRoutes);
 app.use('/api/tier-rules', tierRuleRoutes);
 app.use('/api/receipts', receiptRoutes);
+app.use('/api/auth', authRoutes);
 
 // 404 handler
 app.use((req, res) => {
