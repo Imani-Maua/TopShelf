@@ -206,20 +206,24 @@ router.delete('/:id', validateObjectId, async (req, res) => {
             });
         }
 
-        // Check if has products
         if (existing.products.length > 0) {
-            return res.status(409).json({
-                error: 'Cannot delete category',
-                details: ['Category has associated products']
+            const productIds = existing.products.map(p => p.id);
+            await prisma.receipt.deleteMany({
+                where: { productId: { in: productIds } }
+            });
+
+            
+            await prisma.product.deleteMany({
+                where: { categoryId: id }
             });
         }
 
-        // Delete tier rules first
+
         await prisma.tierRule.deleteMany({
             where: { categoryId: id }
         });
 
-        // Delete category
+
         await prisma.category.delete({
             where: { id }
         });

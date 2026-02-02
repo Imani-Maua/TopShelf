@@ -253,7 +253,7 @@ router.delete('/:id', validateObjectId, async (req, res) => {
 /**
  * POST /api/products/upload-csv
  * Bulk import products from CSV
- * CSV format: name,category
+ * CSV format: name,category,price
  * Auto-creates categories if they don't exist (with default PER_ITEM mode)
  */
 router.post('/upload-csv', upload.single('file'), async (req, res) => {
@@ -289,10 +289,20 @@ router.post('/upload-csv', upload.single('file'), async (req, res) => {
             const rowNum = i + 2; // +2 because CSV is 1-indexed and has header
 
             // Validate required fields
-            if (!row.name || !row.category) {
+            if (!row.name || !row.category || !row.price) {
                 errors.push({
                     row: rowNum,
-                    message: 'Missing required fields (name, category)'
+                    message: 'Missing required fields (name, category, price)'
+                });
+                continue;
+            }
+
+            // Validate price
+            const price = parseFloat(row.price);
+            if (isNaN(price) || price < 0) {
+                errors.push({
+                    row: rowNum,
+                    message: `Invalid price: "${row.price}". Price must be a non-negative number.`
                 });
                 continue;
             }
@@ -330,12 +340,12 @@ router.post('/upload-csv', upload.single('file'), async (req, res) => {
                 newCategories.push(category.name);
             }
 
-            // Create product (price will be 0 by default, needs to be updated later)
+            // Create product with price from CSV
             try {
                 await prisma.product.create({
                     data: {
                         name: row.name.trim(),
-                        price: 0, // Default price, should be updated
+                        price: parseFloat(row.price),
                         categoryId: category.id
                     }
                 });
