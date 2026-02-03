@@ -1,5 +1,5 @@
 const { verifyToken, extractJti } = require('../utils/jwtUtils');
-const tokenService = require('../tokenService');
+const tokenService = require('../services/tokenService');
 
 /**
  * Middleware to require authentication

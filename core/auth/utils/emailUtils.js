@@ -1,3 +1,5 @@
+
+
 /**
  * Generate invite email content
  */
