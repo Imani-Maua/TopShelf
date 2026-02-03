@@ -1,8 +1,10 @@
 const { PrismaClient } = require('@prisma/client');
-const { hashPassword, verifyPassword, generateTemporaryPassword, validatePasswordStrength } = require('./utils/passwordUtils');
-const { createToken, verifyToken, extractJti } = require('./utils/jwtUtils');
-const { generateInviteEmail } = require('./utils/emailUtils');
+const { hashPassword, verifyPassword, generateTemporaryPassword, validatePasswordStrength } = require('../utils/passwordUtils');
+const { createToken, verifyToken, extractJti } = require('../utils/jwtUtils');
+const { generateInviteEmail } = require('../utils/emailUtils');
 const tokenService = require('./tokenService');
+const { sendEmail } = require('./emailService');
+
 
 class UserService {
     constructor() {
@@ -73,21 +75,23 @@ class UserService {
             throw new Error('User is already active');
         }
 
-        // Create invite token
+        
         const invite = await tokenService.createInviteToken(user.id);
 
-        // Generate email (in production, send actual email)
         const emailContent = generateInviteEmail(
             user.email,
             user.firstname,
             invite.token,
-            process.env.FRONTEND_URL || 'http://localhost:8080'
+            process.env.FRONTEND_URL
         );
 
-        console.log('========== INVITE EMAIL ==========');
-        console.log(emailContent);
-        console.log('==================================');
-
+        await sendEmail(
+            user.email,
+            "Welcome to TopShelf",
+            "You have been invited...",
+            emailContent
+        )
+        console.log(`Invite sent to ${user.email}`);
         return {
             userId: user.id,
             email: user.email,

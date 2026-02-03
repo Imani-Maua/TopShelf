@@ -1,6 +1,6 @@
 const { PrismaClient } = require('@prisma/client');
-const { createToken } = require('./utils/jwtUtils');
-const { hashPassword } = require('./utils/passwordUtils');
+const { createToken } = require('../utils/jwtUtils');
+const { hashPassword } = require('../utils/passwordUtils');
 
 const INVITE_EXPIRY = process.env.INVITE_TOKEN_EXPIRY_HOURS || '168'; // 7 days default
 const ACCESS_EXPIRY = process.env.ACCESS_TOKEN_EXPIRY_DAYS || '7'; // 7 days default
