@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const UserService = require('./userService');
+const UserService = require('./services/userService');
 const { authenticate, requireAdmin } = require('./middleware/authenticate');
 
 const userService = new UserService();
