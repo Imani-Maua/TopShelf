@@ -67,5 +67,6 @@ function requireOperations(req, res, next){
 
 module.exports = {
     authenticate,
-    requireAdmin
+    requireAdmin,
+    requireOperations
 };
