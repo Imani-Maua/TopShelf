@@ -5,6 +5,7 @@ const { validateParticipant, validateObjectId } = require('./validators');
 const multer = require('multer');
 const csv = require('csv-parser');
 const { Readable } = require('stream');
+const { requireOperations } = require('../auth/middleware/authenticate');
 
 const prisma = new PrismaClient();
 const upload = multer({ storage: multer.memoryStorage() });
@@ -81,7 +82,7 @@ router.get('/:id', validateObjectId, async (req, res) => {
  * POST /api/participants
  * Create a new participant
  */
-router.post('/', validateParticipant, async (req, res) => {
+router.post('/', validateParticipant, requireOperations, async (req, res) => {
     try {
         const { firstname, lastname } = req.body;
 
@@ -124,7 +125,7 @@ router.post('/', validateParticipant, async (req, res) => {
  * PUT /api/participants/:id
  * Update a participant
  */
-router.put('/:id', validateObjectId, validateParticipant, async (req, res) => {
+router.put('/:id', validateObjectId, validateParticipant, requireOperations, async (req, res) => {
     try {
         const { id } = req.params;
         const { firstname, lastname } = req.body;
@@ -163,7 +164,7 @@ router.put('/:id', validateObjectId, validateParticipant, async (req, res) => {
  * DELETE /api/participants/:id
  * Delete a participant
  */
-router.delete('/:id', validateObjectId, async (req, res) => {
+router.delete('/:id', validateObjectId, requireOperations, async (req, res) => {
     try {
         const { id } = req.params;
 
@@ -212,7 +213,7 @@ router.delete('/:id', validateObjectId, async (req, res) => {
  * POST /api/participants/upload-csv
  * Bulk import participants from CSV
  */
-router.post('/upload-csv', upload.single('file'), async (req, res) => {
+router.post('/upload-csv', upload.single('file'), requireOperations, async (req, res) => {
     try {
         if (!req.file) {
             return res.status(400).json({
