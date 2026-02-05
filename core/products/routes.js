@@ -5,6 +5,7 @@ const { validateProduct, validateObjectId } = require('./validators');
 const multer = require('multer');
 const csv = require('csv-parser');
 const { Readable } = require('stream');
+const { requireOperations } = require('../auth/middleware/authenticate');
 
 const prisma = new PrismaClient();
 const upload = multer({ storage: multer.memoryStorage() });
@@ -86,7 +87,7 @@ router.get('/:id', validateObjectId, async (req, res) => {
  * POST /api/products
  * Create a new product
  */
-router.post('/', validateProduct, async (req, res) => {
+router.post('/', validateProduct, requireOperations, async (req, res) => {
     try {
         const { name, price, categoryId } = req.body;
 
@@ -148,7 +149,7 @@ router.post('/', validateProduct, async (req, res) => {
  * PUT /api/products/:id
  * Update a product
  */
-router.put('/:id', validateObjectId, validateProduct, async (req, res) => {
+router.put('/:id', validateObjectId, validateProduct, requireOperations, async (req, res) => {
     try {
         const { id } = req.params;
         const { name, price, categoryId } = req.body;
@@ -206,7 +207,7 @@ router.put('/:id', validateObjectId, validateProduct, async (req, res) => {
  * DELETE /api/products/:id
  * Delete a product
  */
-router.delete('/:id', validateObjectId, async (req, res) => {
+router.delete('/:id', validateObjectId, requireOperations, async (req, res) => {
     try {
         const { id } = req.params;
 
@@ -256,7 +257,7 @@ router.delete('/:id', validateObjectId, async (req, res) => {
  * CSV format: name,category,price
  * Auto-creates categories if they don't exist (with default PER_ITEM mode)
  */
-router.post('/upload-csv', upload.single('file'), async (req, res) => {
+router.post('/upload-csv', upload.single('file'), requireOperations, async (req, res) => {
     try {
         if (!req.file) {
             return res.status(400).json({
