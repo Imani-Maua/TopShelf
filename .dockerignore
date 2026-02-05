@@ -1,7 +1,15 @@
 node_modules
 .env
 .git
-README.md
 .github
+README.md
 coverage
 documentation
+tests
+*.log
+npm-debug.log*
+.DS_Store
+.vscode
+.idea
+uploads
+debug_db.js
