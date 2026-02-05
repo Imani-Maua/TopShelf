@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { PrismaClient } = require('@prisma/client');
 const { validateForecast, validateObjectId, validateMonthYear } = require('./validators');
+const { requireOperations } = require('../auth/middleware/authenticate');
 
 const prisma = new PrismaClient();
 
@@ -71,7 +72,7 @@ router.get('/:month/:year', validateMonthYear, async (req, res) => {
  * POST /api/forecasts
  * Create a new forecast
  */
-router.post('/', validateForecast, async (req, res) => {
+router.post('/', validateForecast, requireOperations, async (req, res) => {
     try {
         const { month, year, targetAmount, threshold } = req.body;
 
@@ -114,7 +115,7 @@ router.post('/', validateForecast, async (req, res) => {
  * PUT /api/forecasts/:id
  * Update a forecast
  */
-router.put('/:id', validateObjectId, validateForecast, async (req, res) => {
+router.put('/:id', validateObjectId, validateForecast, requireOperations, async (req, res) => {
     try {
         const { id } = req.params;
         const { month, year, targetAmount, threshold } = req.body;
@@ -158,7 +159,7 @@ router.put('/:id', validateObjectId, validateForecast, async (req, res) => {
  * DELETE /api/forecasts/:id
  * Delete a forecast
  */
-router.delete('/:id', validateObjectId, async (req, res) => {
+router.delete('/:id', validateObjectId, requireOperations, async (req, res) => {
     try {
         const { id } = req.params;
 
