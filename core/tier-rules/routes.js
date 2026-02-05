@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { PrismaClient } = require('@prisma/client');
 const { validateTierRule, validateTierRuleUpdate, validateObjectId, validateCategoryId } = require('./validators');
+const { requireOperations } = require('../auth/middleware/authenticate');
 
 const prisma = new PrismaClient();
 
@@ -150,7 +151,7 @@ router.get('/category/:categoryId', validateCategoryId, async (req, res) => {
  * POST /api/tier-rules
  * Create a new tier rule
  */
-router.post('/', validateTierRule, async (req, res) => {
+router.post('/', validateTierRule, requireOperations, async (req, res) => {
     try {
         const { categoryId, minQuantity, bonusPercentage } = req.body;
 
@@ -206,7 +207,7 @@ router.post('/', validateTierRule, async (req, res) => {
  * PUT /api/tier-rules/:id
  * Update a tier rule
  */
-router.put('/:id', validateObjectId, validateTierRuleUpdate, async (req, res) => {
+router.put('/:id', validateObjectId, validateTierRuleUpdate, requireOperations, async (req, res) => {
     try {
         const { id } = req.params;
         const { minQuantity, bonusPercentage } = req.body;
@@ -263,7 +264,7 @@ router.put('/:id', validateObjectId, validateTierRuleUpdate, async (req, res) =>
  * DELETE /api/tier-rules/:id
  * Delete a tier rule
  */
-router.delete('/:id', validateObjectId, async (req, res) => {
+router.delete('/:id', validateObjectId, requireOperations, async (req, res) => {
     try {
         const { id } = req.params;
 
