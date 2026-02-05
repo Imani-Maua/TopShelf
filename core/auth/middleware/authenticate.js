@@ -54,6 +54,17 @@ function requireAdmin(req, res, next) {
     next();
 }
 
+
+function requireOperations(req, res, next){
+    if(!req.user || req.user.role !== 'operations'){
+        return res.status(403).json({
+            error: "Operations access required"
+        });
+        next();
+    }
+
+}
+
 module.exports = {
     authenticate,
     requireAdmin
