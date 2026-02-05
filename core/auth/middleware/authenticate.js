@@ -60,8 +60,9 @@ function requireOperations(req, res, next){
         return res.status(403).json({
             error: "Operations access required"
         });
-        next();
+        
     }
+    next();
 
 }
 
