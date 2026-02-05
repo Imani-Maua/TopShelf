@@ -29,7 +29,7 @@ const upload = multer({
  * 
  * Body: { month: number, year: number, totalRevenue: number }
  */
-bonus.post('/calculate', requireOperations, validateBonusCalculation, async (req, res) => {
+bonus.post('/calculate', validateBonusCalculation, async (req, res) => {
     try {
         const { month, year, totalRevenue } = req.body;
 
