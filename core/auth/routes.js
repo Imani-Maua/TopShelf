@@ -21,9 +21,8 @@ router.post('/create-user', authenticate, requireAdmin, async (req, res) => {
 /**
  * POST /api/auth/send-invite
  * Send invite to a user
- * TEMPORARY: Public for first user setup - make admin-only later!
  */
-router.post('/send-invite', async (req, res) => {
+router.post('/send-invite', requireAdmin, async (req, res) => {
     try {
         const { userId } = req.body;
         const result = await userService.sendInvite(userId);

@@ -5,6 +5,7 @@ const bonus = express.Router();
 const BonusService = require('./services/bonusService');
 const ParsingService = require('./services/parsingService');
 const { validateBonusCalculation } = require('./validators');
+const { requireOperations } = require('../auth/middleware/authenticate')
 
 const bonusService = new BonusService();
 const parsingService = new ParsingService();
@@ -28,7 +29,7 @@ const upload = multer({
  * 
  * Body: { month: number, year: number, totalRevenue: number }
  */
-bonus.post('/calculate', validateBonusCalculation, async (req, res) => {
+bonus.post('/calculate', requireOperations, validateBonusCalculation, async (req, res) => {
     try {
         const { month, year, totalRevenue } = req.body;
 
@@ -66,7 +67,7 @@ bonus.post('/calculate', validateBonusCalculation, async (req, res) => {
  * - month: number (1-12, required if filterByMonth is true)
  * - year: number (required if filterByMonth is true)
  */
-bonus.post('/upload-receipts', upload.single('file'), async (req, res) => {
+bonus.post('/upload-receipts', upload.single('file'), requireOperations, async (req, res) => {
     try {
         if (!req.file) {
             return res.status(400).json({
@@ -136,7 +137,7 @@ bonus.post('/upload-receipts', upload.single('file'), async (req, res) => {
  * 
  * Body: { month: number, year: number, calculationResult: object }
  */
-bonus.post('/save', async (req, res) => {
+bonus.post('/save', requireOperations, async (req, res) => {
     try {
         const { month, year, calculationResult } = req.body;
 

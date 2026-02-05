@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { PrismaClient } = require('@prisma/client');
 const { validateCategory, validateObjectId } = require('./validators');
+const { requireOperations } = require('../auth/middleware/authenticate');
 
 const prisma = new PrismaClient();
 
@@ -78,7 +79,7 @@ router.get('/:id', validateObjectId, async (req, res) => {
  * POST /api/categories
  * Create a new category with tier rules
  */
-router.post('/', validateCategory, async (req, res) => {
+router.post('/', validateCategory, requireOperations, async (req, res) => {
     try {
         const { name, mode, tierRules } = req.body;
 
@@ -133,7 +134,7 @@ router.post('/', validateCategory, async (req, res) => {
  * PUT /api/categories/:id
  * Update a category
  */
-router.put('/:id', validateObjectId, validateCategory, async (req, res) => {
+router.put('/:id', validateObjectId, validateCategory, requireOperations, async (req, res) => {
     try {
         const { id } = req.params;
         const { name, mode, tierRules } = req.body;
@@ -188,7 +189,7 @@ router.put('/:id', validateObjectId, validateCategory, async (req, res) => {
  * DELETE /api/categories/:id
  * Delete a category
  */
-router.delete('/:id', validateObjectId, async (req, res) => {
+router.delete('/:id', validateObjectId, requireOperations, async (req, res) => {
     try {
         const { id } = req.params;
 
