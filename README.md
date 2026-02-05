@@ -1,277 +1,241 @@
-# TopShelf: Upsell Bonus Calculation System
+# 🏆 TopShelf v1.0
 
-TopShelf is a high-performance, modular REST API built to manage and calculate upsell bonuses for restaurant and retail environments. It handles everything from participant management to complex tiered bonus calculations with full audit transparency.
+TopShelf is a RESTful backend API built with Node.js and Express that automates commission-based bonus calculations for retail and restaurant environments. The system replaces manual Excel-based workflows with a high-performance, auditable calculation engine that processes sales data, applies tiered bonus structures, and generates detailed payout reports.
 
-## 💡 Why TopShelf?
+## Problem Statement
 
-### The Problem: Excel + Macros Doesn't Scale
+Traditional bonus calculation workflows rely on manual Excel spreadsheets with macros, resulting in:
+- **Processing delays**: 60+ day lag between performance period end and payout distribution
+- **Calculation errors**: Manual data entry and formula inconsistencies requiring extensive reconciliation
+- **Limited auditability**: Lack of transparency in bonus calculation methodology
+- **Scalability constraints**: Performance degradation with increasing data volumes and participant counts
 
-Before TopShelf, bonus calculations relied on **manual Excel spreadsheets with macros**—a process that was:
+TopShelf addresses these challenges by providing an automated, transparent, and scalable solution that reduces processing time by 50% while maintaining complete audit trails.
 
-- **⏱️ Painfully Slow**: Participants who met their threshold requirements in **January** had to wait until **March** to receive their payouts—a **2-month delay** that hurt morale and retention.
-- **❌ Error-Prone**: Manual data entry and formula errors led to incorrect calculations, requiring time-consuming reconciliation.
-- **🔒 Opaque**: Finance teams struggled to audit calculations, and employees couldn't understand why they didn't receive bonuses, leading to confusion and disputes.
-- **📊 No Breakdown**: Lack of detailed, category-level reporting made it impossible to identify performance patterns or provide meaningful feedback.
+## Key Features
 
-### The Solution: Same-Month Payouts with Full Transparency
+### Bonus Calculation Engine
+- **Tiered bonus structures**: Configurable tier rules with monotonically increasing thresholds and percentages
+- **Multiple calculation modes**: Per-item (`PER_ITEM`) and per-category (`PER_CATEGORY`) bonus computation
+- **Forecast-based thresholds**: Performance targets with automatic threshold validation
+- **Detailed audit logs**: Category-level breakdown with explanations for threshold non-attainment
 
-TopShelf **eliminates the 2-month processing delay** by automating the entire bonus calculation pipeline:
+### Data Validation & Business Rules
+- **Monotonic progression enforcement**: Automated validation ensuring higher quantities yield higher bonuses
+- **Referential integrity**: Cascade constraints preventing deletion of categories with active products
+- **Input validation**: Comprehensive request validation using Express middleware
+- **Read-only receipt data**: Immutable historical sales records
 
-> **Before**: Meet threshold in January → Get paid in March (**60+ days**)  
-> **After**: Meet threshold in January → Get paid in January (**same month**)
+### Authentication & Authorization
+- **JWT-based authentication**: Stateless token-based session management
+- **Role-based access control (RBAC)**: Admin and user role separation
+- **Secure password handling**: Bcrypt hashing with configurable salt rounds
+- **Token lifecycle management**: Token blacklisting for logout and session invalidation
 
-#### Key Benefits:
+### Testing & Quality Assurance
+- **245+ automated tests**: Unit, integration, and end-to-end test coverage
+- **Jest test framework**: Comprehensive test suite with mocking and assertions
+- **Continuous integration**: GitHub Actions pipeline for automated testing
+- **Code coverage reporting**: Detailed coverage metrics for all modules
 
-- **⚡ 100% Faster Processing**: Automated calculations reduce processing time from **2 months to same-day**, enabling same-month payouts.
-- **🎯 Zero Calculation Errors**: Strict validation and automated tier logic eliminate manual mistakes.
-- **🔍 Complete Audit Trail**: Detailed breakdowns show exactly how each bonus was calculated, including explanations for participants who didn't meet thresholds.
-- **📈 Actionable Insights**: Finance teams get category-level performance data, and employees understand their earnings with full transparency.
+## Tech Stack
 
-## 🚀 Features
+-  **Runtime**  Node.js v22+ 
+-  **Framework** Express.js 5.x 
+-  **ORM**  Prisma 5.x 
+-  **Database**  MongoDB Atlas 
+-  **Authentication**  jsonwebtoken 
+-  **Password Hashing**  bcrypt 
+-  **Testing**  Jest + Supertest 
+-  **Containerization** Docker + Docker Compose 
+-  **CI/CD** GitHub Actions 
 
-- **Custom Bonus Engine**: 
-  - Dynamic tiered bonus structures.
-  - Supports `PER_ITEM` (bonus per product sold) and `PER_CATEGORY` (bonus based on total category volume) modes.
-  - **Audit Log Transparency**: Provides detailed breakdowns, including explanations for participants who didn't meet thresholds.
-- **Strict Data Validation**:
-  - **Monotonic Progression**: Tier rules automatically enforced to ensure higher quantities always yield higher bonus percentages.
-  - **Category Integration**: Business rules prevent deletion of categories with active products and enforce minimum tier rules.
-- **Robust API Coverage**: Full CRUD for Participants, Categories, Products, Tier Rules, and Forecasts.
-- **Read-Only Receipt Tracking**: Historical sales data integrity is maintained with read-only receipt endpoints.
-- **Comprehensive Testing**: 185+ automated tests covering every endpoint and business logic edge case.
-- **Fully Containerized**: Docker support for consistent development and deployment environments.
+## Project Structure
 
-## 🛠 Tech Stack
-
-- **Runtime**: [Node.js](https://nodejs.org/) (v22+)
-- **Framework**: [Express.js](https://expressjs.com/)
-- **ORM**: [Prisma](https://www.prisma.io/)
-- **Database**: [MongoDB Atlas](https://www.mongodb.com/)
-- **Testing**: [Jest](https://jestjs.io/) & [Supertest](https://github.com/ladjs/supertest)
-- **Containerization**: [Docker](https://www.docker.com/) & [Docker Compose](https://docs.docker.com/compose/)
-- **CI/CD**: GitHub Actions
-
-## 📁 Project Structure
-
-```text
-├── core/                   # Modularized business logic (one folder per resource)
-│   ├── bonus/              # Bonus calculation engine and services
-│   ├── participants/       # Participant management logic
-│   ├── categories/         # Category definitions and bonus modes
-│   ├── products/           # Product catalog logic
-│   ├── tier-rules/         # Tiered bonus logic
-│   ├── forecasts/          # Target and threshold settings
-│   └── receipts/           # Read-only history logic
-├── prisma/                 # Prisma schema, seeds, and migrations
-├── src/                    # Application entry points (app.js, server.js)
-├── tests/                  # Automated test suites (mirrors core structure)
-├── Dockerfile              # Multi-stage Docker build configuration
-├── docker-compose.yml      # Local development orchestration
-└── .dockerignore           # Docker build optimization
+```
+TopShelf-backend/
+├── core/                       # Business logic layer
+│   ├── auth/                   # Authentication & authorization
+│   │   ├── middleware/         # JWT validation middleware
+│   │   ├── services/           # User, token, email services
+│   │   ├── utils/              # JWT, password, email utilities
+│   │   └── routes.js           # Auth API endpoints
+│   ├── bonus/                  # Bonus calculation engine
+│   │   ├── engine/             # Calculation algorithms
+│   │   ├── services/           # Bonus computation services
+│   │   └── routes.js           # Bonus API endpoints
+│   ├── participants/           # Participant management
+│   ├── categories/             # Product category management
+│   ├── products/               # Product catalog
+│   ├── tier-rules/             # Bonus tier configuration
+│   ├── forecasts/              # Performance targets
+│   └── receipts/               # Sales transaction history
+├── prisma/                     # Database schema & migrations
+│   ├── schema.prisma           # Prisma schema definition
+│   └── seed.js                 # Database seeding script
+├── src/                        # Application entry point
+│   ├── app.js                  # Express application setup
+│   └── server.js               # HTTP server initialization
+├── tests/                      # Test suites (mirrors core/)
+├── Dockerfile                  # Multi-stage Docker build
+├── docker-compose.yml          # Development environment setup
+└── .env.example                # Environment variable template
 ```
 
-## 🛠 Getting Started
+## Setup Instructions
 
 ### Prerequisites
 
-- **Docker & Docker Compose** (recommended) - [Install Docker](https://docs.docker.com/get-docker/)
-- **OR** Node.js v22+ and MongoDB (for local development without Docker)
+- **Docker & Docker Compose** (recommended) or Node.js v22+
+- **MongoDB Atlas account** (free tier available)
 
-### 🔑 Environment Variables
+### Environment Configuration
 
-Create a `.env` file in the project root (see `.env.example` for template):
+Create a `.env` file in the project root:
 
-```env
-DATABASE_URL="mongodb+srv://username:password@cluster.mongodb.net/database?retryWrites=true&w=majority"
+```bash
+DATABASE_URL="mongodb+srv://username:password@cluster.mongodb.net/database?retryWrites=true&w=majority&appName=cluster"
 PORT=3000
 NODE_ENV="development"
+JWT_SECRET="secure-random-string-min-32-characters"
+FRONTEND_URL="http://localhost:5173"
 ```
 
----
+### Docker Deployment (Recommended)
 
-## 🐳 Quick Start with Docker (Recommended)
-
-The easiest way to run TopShelf is using Docker Compose:
-
-### 1. Clone the repository
 ```bash
+# Clone repository
 git clone <repository-url>
-cd TopShelf
-```
+cd TopShelf-backend
 
-### 2. Create your `.env` file
-```bash
+# Copy environment template
 cp .env.example .env
-# Edit .env with your MongoDB Atlas credentials
-```
+# Edit .env with your configuration
 
-### 3. Start the application
-```bash
+# Start application
 docker-compose up
+
+# Run tests
+docker-compose exec backend npm test
 ```
 
 The API will be available at `http://localhost:3000`
 
-### 4. Run tests in Docker
+### Local Development (Without Docker)
+
 ```bash
+# Install dependencies
+npm install
+
+# Generate Prisma client
+npx prisma generate
+
+# Push schema to database
+npx prisma db push
+
+# (Optional) Seed database
+npx prisma db seed
+
+# Start development server
+npm run dev
+```
+
+## API Endpoints
+
+### Authentication
+- `POST /api/auth/login` - Authenticate user and receive JWT
+- `POST /api/auth/logout` - Invalidate JWT token
+- `GET /api/auth/me` - Get current user profile
+- `POST /api/auth/create-user` - Create user (Admin)
+- `POST /api/auth/send-invite` - Send activation email (Admin)
+- `POST /api/auth/set-password` - Set password via invite token
+- `GET /api/auth/users` - List all users (Admin)
+- `PATCH /api/auth/users/:id/deactivate` - Deactivate user (Admin)
+- `DELETE /api/auth/users/:id` - Delete user (Admin)
+
+### Core Resources
+- `GET|POST|PUT|DELETE /api/participants` - Participant management
+- `GET|POST|PUT|DELETE /api/categories` - Category management
+- `GET|POST|PUT|DELETE /api/products` - Product management
+- `GET|POST|PUT|DELETE /api/tier-rules` - Tier rule configuration
+- `GET|POST|PUT|DELETE /api/forecasts` - Forecast management
+- `GET /api/receipts` - Receipt query (read-only)
+
+### Bonus Calculation
+- `POST /api/bonus/calculate` - Execute bonus calculation
+- `GET /api/bonus/payouts` - Retrieve calculated payouts
+
+### Health Check
+- `GET /api/health` - Service health status
+
+## Testing
+
+```bash
+# Run all tests
+npm test
+
+# Run tests with coverage
+npm test -- --coverage
+
+# Run specific test suite
+npm test -- tests/auth
+npm test -- tests/bonus
+
+# Run tests in Docker
 docker-compose exec backend npm test
 ```
 
-### 5. Stop the application
+**Test Suite Statistics:**
+- Total Tests: 245+
+- Test Execution Time: ~8 seconds
+- Coverage: 60%+ overall, 80%+ for auth module
+
+## Docker Commands
+
 ```bash
+# Build Docker image
+docker build --target test -t topshelf-backend:test .
+
+# Run tests in container
+docker run -e DATABASE_URL="connection-string" topshelf-backend:test npm test
+
+# Access container shell
+docker-compose exec backend bash
+
+# View logs
+docker-compose logs -f backend
+
+# Rebuild after changes
+docker-compose up --build
+
+# Stop and remove containers
 docker-compose down
 ```
 
----
+## CI/CD Pipeline
 
-## 💻 Local Development (Without Docker)
+GitHub Actions workflow executes on every push and pull request:
+1. Build Docker image
+2. Run full test suite (245+ tests)
+3. Validate code quality
+4. Ensure zero regressions
 
-If you prefer to run without Docker:
+**Pipeline Performance:** ~53 seconds total execution time
 
-### 1. Install dependencies
-```bash
-npm install
-```
-
-### 2. Setup Prisma
-```bash
-npx prisma generate
-npx prisma db push
-```
-
-### 3. (Optional) Seed database
-```bash
-npx prisma db seed
-```
-
-### 4. Start the server
-```bash
-npm start
-```
-
-The API will be available at `http://localhost:3000`
-
----
-
-## 🧪 Testing
-
-The project maintains high stability via a suite of 185+ tests.
-
-### Run tests locally
-```bash
-npm test
-```
-
-### Run tests with coverage
-```bash
-npm test -- --coverage
-```
-
-### Run tests in Docker
-```bash
-docker-compose exec backend npm test
-```
-
----
-
-## 🐳 Docker Commands Reference
-
-### Build the Docker image
-```bash
-docker build --target test -t topshelf-backend:test .
-```
-
-### Run tests in a container
-```bash
-docker run -e DATABASE_URL="your-connection-string" topshelf-backend:test npm test
-```
-
-### Access container shell
-```bash
-docker-compose exec backend bash
-```
-
-### View logs
-```bash
-docker-compose logs -f backend
-```
-
-### Rebuild after code changes
-```bash
-docker-compose up --build
-```
-
----
-
-## 📡 API Endpoints
-
-### Key Resources
-
-| Resource | Methods | Description |
-| :--- | :--- | :--- |
-| `/api/participants` | GET, POST, PUT, DELETE | Manage sellers/staff |
-| `/api/categories` | GET, POST, PUT, DELETE | Product groups & bonus modes |
-| `/api/products` | GET, POST, PUT, DELETE | Individual item management |
-| `/api/tier-rules` | GET, POST, PUT, DELETE | Bonus tier configuration |
-| `/api/forecasts` | GET, POST, PUT, DELETE | Monthly targets & thresholds |
-| `/api/bonus/calculate` | POST | Trigger bonus calculation for a period |
-| `/api/bonus/payouts` | GET | View calculated bonus payouts |
-| `/api/receipts` | GET | View historical sales (Read-Only) |
-
-### Health Check
-```bash
-curl http://localhost:3000/api/health
-```
-
----
-
-## 🛡 CI/CD
-
-Automated testing runs on every push and pull request via **GitHub Actions**:
-
-- ✅ Builds Docker image
-- ✅ Runs full test suite (185+ tests)
-- ✅ Validates code quality
-- ✅ Ensures zero regressions
-
-**CI Status:** All tests passing in ~53 seconds ⚡
-
----
-
-## 🏗 Architecture Highlights
-
-### Multi-Stage Docker Build
-- **Test Stage**: Includes dev dependencies and test suites
-- **Production Stage**: Optimized, production-only dependencies
-
-### Environment-Specific Configuration
-- **Local**: Uses `.env` file via docker-compose
-- **CI**: Uses GitHub Secrets
-- **Production**: Uses cloud provider secret management
-
-### Database Strategy
-- MongoDB Atlas (cloud-hosted)
-- No local database container needed
-- Prisma ORM for type-safe queries
-
----
-
-## 🤝 Contributing
+## Contributing
 
 1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Make your changes
-4. Run tests (`npm test` or `docker-compose exec backend npm test`)
-5. Commit your changes (`git commit -m 'Add amazing feature'`)
-6. Push to the branch (`git push origin feature/amazing-feature`)
+2. Create a feature branch (`git checkout -b feature/enhancement`)
+3. Implement changes with appropriate tests
+4. Ensure all tests pass (`npm test`)
+5. Commit changes (`git commit -m 'Add enhancement'`)
+6. Push to branch (`git push origin feature/enhancement`)
 7. Open a Pull Request
 
----
-
-## 📝 License
-
-ISC
-
----
+**Contribution Guidelines:**
+- All new features must include tests
+- Maintain existing code style and conventions
+- Update documentation for API changes
+- Ensure CI/CD pipeline passes
 
 **Developed by Maua Imani**
